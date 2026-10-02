@@ -42,17 +42,25 @@
       const tabla = document.getElementById("tablaAdmin");
       const registros = JSON.parse(localStorage.getItem("registros")) || [];
 
-      registros.forEach(r => {
+      if (registros.length === 0) {
         const fila = document.createElement("tr");
         fila.innerHTML = `
-          <td>${r.usuario}</td>
-          <td>${r.iban}</td>
-          <td>${r.banco}</td>
-          <td><img src="${r.foto}" alt="Carnet"></td>
-          <td><button onclick="reportarFraude('${r.usuario}')">Reportar fraude</button></td>
+          <td colspan="5">No hay registros disponibles. Primero llena un formulario en index.html.</td>
         `;
         tabla.appendChild(fila);
-      });
+      } else {
+        registros.forEach(r => {
+          const fila = document.createElement("tr");
+          fila.innerHTML = `
+            <td>${r.usuario}</td>
+            <td>${r.iban}</td>
+            <td>${r.banco}</td>
+            <td><img src="${r.foto}" alt="Carnet"></td>
+            <td><button onclick="reportarFraude('${r.usuario}')">Reportar fraude</button></td>
+          `;
+          tabla.appendChild(fila);
+        });
+      }
     };
 
     // Simulación de reporte de fraude
