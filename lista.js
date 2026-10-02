@@ -63,4 +63,20 @@ const bancosIBAN = [
   { pais: "Egipto", banco: "National Bank of Egypt" },
   { pais: "Túnez", banco: "Banque de Tunisie" },
   { pais: "Argelia", banco: "Banque Extérieure d’Algérie" },
-  { pais: "Mauritania", banco: "Banque
+  { pais: "Mauritania", banco: "Banque Mauritanienne" },
+  { pais: "Libia", banco: "Libyan Foreign Bank" },
+  { pais: "Seychelles", banco: "Seychelles Commercial Bank" },
+  { pais: "Sudán", banco: "Bank of Khartoum" },
+  { pais: "Somalia", banco: "Premier Bank Somalia" },
+  { pais: "Cabo Verde", banco: "Caixa Económica de Cabo Verde" },
+  { pais: "Djibouti", banco: "Banque pour le Commerce et l’Industrie" },
+
+  // América Latina y Caribe
+  { pais: "Costa Rica", banco: "Banco Nacional de Costa Rica" },
+  { pais: "República Dominicana", banco: "Banco Popular Dominicano" },
+  { pais: "El Salvador", banco: "Banco Agrícola" },
+  { pais: "Guatemala", banco: "Banco Industrial" },
+  { pais: "Honduras", banco: "Banco Atlántida" },
+  { pais: "Nicaragua", banco: "Banco de la Producción" },
+  { pais: "Brasil", banco: "Banco do Brasil" }
+];
