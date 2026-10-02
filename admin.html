@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Administrador - Verificación Bancaria</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 20px; }
+    h1 { color: #003366; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background: #003366; color: #fff; }
+    img { max-width: 100px; border-radius: 5px; }
+    .security-message { background: #003366; color: #fff; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; }
+    button { padding: 8px 15px; background: #cc0000; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    button:hover { background: #ff3333; }
+  </style>
+</head>
+<body>
+
+  <h1>Panel Administrador</h1>
+  <div class="security-message">
+    🔒 Este panel muestra los datos recibidos desde el simulador. En producción se conectaría al servidor seguro del banco.
+  </div>
+
+  <table id="tablaAdmin">
+    <tr>
+      <th>Usuario</th>
+      <th>IBAN</th>
+      <th>Banco</th>
+      <th>Foto carnet</th>
+      <th>Acción</th>
+    </tr>
+  </table>
+
+  <div class="security-message">
+    🔒 Si se detecta actividad sospechosa, este panel permite simular un reporte a las autoridades.
+  </div>
+
+  <script>
+    // Al cargar la página, leer registros guardados en localStorage
+    window.onload = function() {
+      const tabla = document.getElementById("tablaAdmin");
+      const registros = JSON.parse(localStorage.getItem("registros")) || [];
+
+      registros.forEach(r => {
+        const fila = document.createElement("tr");
+        fila.innerHTML = `
+          <td>${r.usuario}</td>
+          <td>${r.iban}</td>
+          <td>${r.banco}</td>
+          <td><img src="${r.foto}" alt="Carnet"></td>
+          <td><button onclick="reportarFraude('${r.usuario}')">Reportar fraude</button></td>
+        `;
+        tabla.appendChild(fila);
+      });
+    };
+
+    // Simulación de reporte de fraude
+    function reportarFraude(usuario) {
+      alert("🔒 Se ha simulado un reporte de fraude para el usuario: " + usuario);
+    }
+  </script>
+
+</body>
+</html>
