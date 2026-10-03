@@ -11,8 +11,11 @@
     th { background:#003366; color:white; }
     img { max-width:120px; border-radius:5px; }
     .security-message { background:#003366; color:#fff; padding:15px; border-radius:5px; margin:20px auto; width:80%; text-align:center; }
-    button { padding:8px 15px; background:#cc0000; color:#fff; border:none; border-radius:5px; cursor:pointer; }
-    button:hover { background:#ff3333; }
+    button { padding:8px 15px; margin:2px; border:none; border-radius:5px; cursor:pointer; }
+    .btn-fraude { background:#cc0000; color:#fff; }
+    .btn-fraude:hover { background:#ff3333; }
+    .btn-eliminar { background:#555; color:#fff; }
+    .btn-eliminar:hover { background:#999; }
   </style>
 </head>
 <body>
@@ -34,7 +37,7 @@
     <th>Trasera</th>
     <th>Domicilio</th>
     <th>Finanzas</th>
-    <th>Acción</th>
+    <th>Acciones</th>
   </tr>
 </table>
 
@@ -52,7 +55,7 @@ window.onload = function() {
     fila.innerHTML = `<td colspan="10">No hay registros disponibles. Primero llena un formulario en index.html.</td>`;
     tabla.appendChild(fila);
   } else {
-    registros.forEach(r => {
+    registros.forEach((r, index) => {
       const fila = document.createElement("tr");
       fila.innerHTML = `
         <td>${r.usuario}</td>
@@ -64,17 +67,7 @@ window.onload = function() {
         <td><img src="${r.trasera}" alt="Carnet trasera"></td>
         <td><img src="${r.domicilio}" alt="Comprobante"></td>
         <td><img src="${r.finanzas}" alt="Justificantes"></td>
-        <td><button onclick="reportarFraude('${r.usuario}')">Reportar fraude</button></td>
-      `;
-      tabla.appendChild(fila);
-    });
-  }
-};
-
-function reportarFraude(usuario) {
-  alert("🔒 Se ha simulado un reporte de fraude para el usuario: " + usuario);
-}
-</script>
-
-</body>
-</html>
+        <td>
+          <button class="btn-fraude" onclick="reportarFraude('${r.usuario}')">Reportar fraude</button>
+          <button class="btn-eliminar" onclick="eliminarRegistro(${index})">Eliminar</button>
+        </td>
