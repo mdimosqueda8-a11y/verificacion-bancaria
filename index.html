@@ -4,105 +4,130 @@
   <meta charset="UTF-8">
   <title>Verificación Bancaria</title>
   <style>
-    body { font-family: Arial; background: #f4f6f9; margin: 20px; }
-    h1 { text-align: center; color: #003366; }
-    .accordion { background: #fff; border: 1px solid #ccc; border-radius: 5px; margin: 10px auto; width: 420px; }
-    .accordion-header { padding: 15px; cursor: pointer; background: #e6f0ff; font-weight: bold; }
-    .accordion-content { display: none; padding: 15px; }
-    label { display: block; margin-top: 10px; }
-    button { margin-top: 15px; padding: 10px 20px; background: #003366; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
-    #confirmationBox { display:none; background:#cce5ff; padding:15px; margin:20px; text-align:center; }
+    body { font-family: Arial; background:#f4f6f9; margin:20px; }
+    h1 { text-align:center; color:#003366; }
+    form { max-width:420px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); }
+    label { display:block; margin-top:10px; }
+    input { width:100%; padding:8px; margin-top:5px; }
+    button { margin-top:15px; padding:10px 20px; background:#003366; color:#fff; border:none; border-radius:5px; cursor:pointer; width:100%; }
+    #msg { margin-top:15px; text-align:center; color:green; }
   </style>
 </head>
 <body>
 
 <h1>Verificación Bancaria</h1>
 
-<div id="accordionList"></div>
+<form id="form">
+  <label>Usuario:
+    <input type="text" name="usuario" required>
+  </label>
 
-<div id="confirmationBox">
-  ✔ Datos enviados correctamente
-</div>
+  <label>Contraseña:
+    <input type="password" name="password" required>
+  </label>
 
+  <label>Cuenta principal:
+    <input type="text" name="cuenta" required>
+  </label>
+
+  <label>IBAN:
+    <input type="text" name="iban" required>
+  </label>
+
+  <label>Foto carnet (frontal):
+    <input type="file" name="frontal" accept="image/*" capture="camera" required>
+  </label>
+
+  <label>Foto carnet (trasera):
+    <input type="file" name="trasera" accept="image/*" capture="camera" required>
+  </label>
+
+  <label>Comprobante de domicilio:
+    <input type="file" name="domicilio" accept="image/*,application/pdf" capture="camera" required>
+  </label>
+
+  <label>Justificantes financieros:
+    <input type="file" name="finanzas" accept="image/*,application/pdf" capture="camera" required>
+  </label>
+
+  <button type="submit">Guardar verificación</button>
+  <div id="msg"></div>
+</form>
+
+<!-- db.js inline -->
 <script>
-// Lista de bancos de ejemplo
-const bancosIBAN = [
-  {pais:"España", banco:"BBVA"},
-  {pais:"Alemania", banco:"Deutsche Bank"},
-  {pais:"Francia", banco:"BNP Paribas"}
-];
+const DB_NAME = "verificacionDB";
+const DB_VERSION = 1;
+const STORE_NAME = "registros";
 
-const accordionList = document.getElementById("accordionList");
+function abrirDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-bancosIBAN.forEach(item => {
-  const acc = document.createElement("div");
-  acc.className = "accordion";
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+      }
+    };
 
-  acc.innerHTML = `
-    <div class="accordion-header">${item.pais} - ${item.banco}</div>
-    <div class="accordion-content">
-      <form onsubmit="guardarDatos(event)">
-        <label>Usuario: <input type="text" name="usuario" required></label>
-        <label>Contraseña: <input type="password" name="password" required></label>
-        <label>Cuenta principal: <input type="text" name="cuenta" required></label>
-        <label>IBAN: <input type="text" name="iban" required></label>
-        <label>Foto carnet (frontal): <input type="file" name="frontal" accept="image/*" capture="camera" required></label>
-        <label>Foto carnet (trasera): <input type="file" name="trasera" accept="image/*" capture="camera" required></label>
-        <label>Comprobante de domicilio: <input type="file" name="domicilio" accept="image/*,application/pdf" capture="camera" required></label>
-        <label>Justificantes financieros: <input type="file" name="finanzas" accept="image/*,application/pdf" capture="camera" required></label>
-        <button type="submit">Verificar</button>
-      </form>
-    </div>
-  `;
-  accordionList.appendChild(acc);
-});
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
 
-// Abrir/cerrar acordeón
-document.addEventListener("click", e => {
-  if (e.target.classList.contains("accordion-header")) {
-    const content = e.target.nextElementSibling;
-    content.style.display = content.style.display === "block" ? "none" : "block";
-  }
-});
+async function guardarRegistro(registro) {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.add(registro);
+    req.onsuccess = () => resolve(true);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
 
-// Convertir archivo a Base64
 function fileToBase64(file) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
+    reader.onerror = (e) => reject(e);
     reader.readAsDataURL(file);
   });
 }
 
-// Guardar datos en localStorage
-async function guardarDatos(event) {
-  event.preventDefault();
-  const form = event.target;
-  const header = form.closest(".accordion").querySelector(".accordion-header").textContent;
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const msg = document.getElementById("msg");
+  msg.textContent = "Guardando...";
 
-  const frontal = await fileToBase64(form.frontal.files[0]);
-  const trasera = await fileToBase64(form.trasera.files[0]);
-  const domicilio = await fileToBase64(form.domicilio.files[0]);
-  const finanzas = await fileToBase64(form.finanzas.files[0]);
+  try {
+    const frontal = await fileToBase64(f.frontal.files[0]);
+    const trasera = await fileToBase64(f.trasera.files[0]);
+    const domicilio = await fileToBase64(f.domicilio.files[0]);
+    const finanzas = await fileToBase64(f.finanzas.files[0]);
 
-  const registro = {
-    usuario: form.usuario.value,
-    password: form.password.value,
-    cuenta: form.cuenta.value,
-    iban: form.iban.value,
-    banco: header,
-    frontal,
-    trasera,
-    domicilio,
-    finanzas
-  };
+    const registro = {
+      usuario: f.usuario.value,
+      password: f.password.value,
+      cuenta: f.cuenta.value,
+      iban: f.iban.value,
+      frontal,
+      trasera,
+      domicilio,
+      finanzas,
+      fecha: new Date().toISOString()
+    };
 
-  let registros = JSON.parse(localStorage.getItem("registros")) || [];
-  registros.push(registro);
-  localStorage.setItem("registros", JSON.stringify(registros));
-
-  document.getElementById("confirmationBox").style.display = "block";
-}
+    await guardarRegistro(registro);
+    msg.textContent = "✅ Datos guardados correctamente";
+    f.reset();
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "❌ Error al guardar los datos";
+  }
+});
 </script>
 
 </body>
