@@ -58,8 +58,6 @@
 
 <script>
 // ---------------- VALIDACIONES ----------------
-
-// Mostrar error
 function mostrarError(campo, mensaje) {
   campo.classList.add("error-input");
   let error = campo.nextElementSibling;
@@ -71,32 +69,25 @@ function mostrarError(campo, mensaje) {
   error.textContent = mensaje;
 }
 
-// Limpiar error
 function limpiarError(campo) {
   campo.classList.remove("error-input");
   let error = campo.nextElementSibling;
   if (error && error.classList.contains("error")) error.remove();
 }
 
-// Validar cuenta bancaria
 function validarCuenta(cuenta) {
   return /^\d{10,20}$/.test(cuenta);
 }
 
-// Validar IBAN real (MOD-97)
 function validarIBAN(iban) {
   iban = iban.replace(/\s+/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(iban)) return false;
-
   const pais = iban.slice(0, 2);
   const longitudes = { ES:24, FR:27, DE:22, IT:27, NL:18, BE:16, PT:25, GB:22 };
-
   if (!longitudes[pais]) return false;
   if (iban.length !== longitudes[pais]) return false;
-
   const rearr = iban.slice(4) + iban.slice(0, 4);
   const expanded = rearr.replace(/[A-Z]/g, c => c.charCodeAt(0) - 55);
-
   let mod = '';
   for (let i = 0; i < expanded.length; i++) {
     mod = (mod + expanded[i]) % 97;
@@ -104,7 +95,6 @@ function validarIBAN(iban) {
   return mod === 1;
 }
 
-// Convertir archivo a Base64
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -114,7 +104,6 @@ function fileToBase64(file) {
   });
 }
 
-// Validar archivo
 function validarArchivo(file, tiposPermitidos, minSizeKB = 20) {
   if (!file) return false;
   const tipoValido = tiposPermitidos.includes(file.type);
@@ -122,15 +111,13 @@ function validarArchivo(file, tiposPermitidos, minSizeKB = 20) {
   return tipoValido && tamañoValido;
 }
 
-// Comparar imágenes
 async function compararImagenes(file1, file2) {
   const b1 = await fileToBase64(file1);
   const b2 = await fileToBase64(file2);
   return b1 !== b2;
 }
 
-// ---------------- GUARDAR EN INDEXEDDB ----------------
-
+// ---------------- INDEXEDDB ----------------
 const DB_NAME = "verificacionDB";
 const DB_VERSION = 1;
 const STORE_NAME = "registros";
@@ -160,74 +147,66 @@ async function guardarRegistro(registro) {
 }
 
 // ---------------- SUBMIT ----------------
-
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
   let valido = true;
 
-  // Limpiar errores
   [f.usuario, f.password, f.cuenta, f.iban, f.frontal, f.trasera, f.domicilio, f.finanzas]
     .forEach(campo => limpiarError(campo));
 
-  // Usuario
   if (f.usuario.value.trim().length < 4) {
-    mostrarError(f.usuario, "Usuario demasiado corto");
+    mostrarError(f.usuario, "Usuario demasiado corto (mínimo 4 caracteres)");
     valido = false;
   }
 
-  // Contraseña
   if (f.password.value.trim().length < 8) {
     mostrarError(f.password, "Contraseña mínima 8 caracteres");
     valido = false;
   }
 
-  // Cuenta
   if (!validarCuenta(f.cuenta.value)) {
-    mostrarError(f.cuenta, "Cuenta inválida (solo números)");
+    mostrarError(f.cuenta, "Cuenta inválida (solo números, 10-20 dígitos)");
     valido = false;
   }
 
-  // IBAN
   if (!validarIBAN(f.iban.value)) {
     mostrarError(f.iban, "IBAN incorrecto o inválido");
     valido = false;
   }
 
-  // Archivos
   const frontal = f.frontal.files[0];
   const trasera = f.trasera.files[0];
   const domicilio = f.domicilio.files[0];
   const finanzas = f.finanzas.files[0];
 
   if (!validarArchivo(frontal, ["image/jpeg", "image/png"])) {
-    mostrarError(f.frontal, "Foto frontal inválida");
+    mostrarError(f.frontal, "Imagen no permitida (solo JPG/PNG, mínimo 20KB)");
     valido = false;
   }
 
   if (!validarArchivo(trasera, ["image/jpeg", "image/png"])) {
-    mostrarError(f.trasera, "Foto trasera inválida");
+    mostrarError(f.trasera, "Imagen no permitida (solo JPG/PNG, mínimo 20KB)");
     valido = false;
   }
 
   if (!(await compararImagenes(frontal, trasera))) {
-    mostrarError(f.trasera, "La foto trasera no puede ser igual a la frontal");
+    mostrarError(f.trasera, "Corrige la imagen: no puede ser igual a la frontal");
     valido = false;
   }
 
   if (!validarArchivo(domicilio, ["image/jpeg", "image/png", "application/pdf"])) {
-    mostrarError(f.domicilio, "Documento de domicilio inválido");
+    mostrarError(f.domicilio, "Documento inválido (solo PDF o imagen válida)");
     valido = false;
   }
 
   if (!validarArchivo(finanzas, ["image/jpeg", "image/png", "application/pdf"])) {
-    mostrarError(f.finanzas, "Documento financiero inválido");
+    mostrarError(f.finanzas, "Documento inválido (solo PDF o imagen válida)");
     valido = false;
   }
 
   if (!valido) return;
 
-  // Convertir archivos
   const frontalB64 = await fileToBase64(frontal);
   const traseraB64 = await fileToBase64(trasera);
   const domicilioB64 = await fileToBase64(domicilio);
@@ -246,7 +225,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   };
 
   await guardarRegistro(registro);
-  alert("Datos guardados correctamente");
+  alert("✅ Datos guardados correctamente");
   f.reset();
 });
 </script>
