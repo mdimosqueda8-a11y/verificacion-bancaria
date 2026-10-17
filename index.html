@@ -1,23 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Verificación Bancaria</title>
-  <style>
-    body { font-family: Arial; background:#f4f6f9; margin:20px; }
-    h1 { text-align:center; color:#003366; }
-    form { max-width:420px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); }
-    label { display:block; margin-top:10px; }
-    input { width:100%; padding:8px; margin-top:5px; }
-    button { margin-top:15px; padding:10px 20px; background:#003366; color:#fff; border:none; border-radius:5px; cursor:pointer; width:100%; }
-    #msg { margin-top:15px; text-align:center; color:green; }
-  </style>
+<meta charset="UTF-8">
+<title>Verificación Bancaria</title>
+<style>
+  body { font-family: Arial; background:#f4f6f9; margin:20px; }
+  h1 { text-align:center; color:#003366; }
+  form { max-width:420px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); }
+  label { display:block; margin-top:10px; }
+  input { width:100%; padding:8px; margin-top:5px; }
+  button { margin-top:15px; padding:10px 20px; background:#003366; color:#fff; border:none; border-radius:5px; cursor:pointer; width:100%; }
+  .error { color:red; font-size:14px; margin-top:4px; }
+  .error-input { border:2px solid red; }
+</style>
 </head>
 <body>
 
 <h1>Verificación Bancaria</h1>
 
 <form id="form">
+
   <label>Usuario:
     <input type="text" name="usuario" required>
   </label>
@@ -26,7 +28,7 @@
     <input type="password" name="password" required>
   </label>
 
-  <label>Cuenta principal:
+  <label>Cuenta bancaria:
     <input type="text" name="cuenta" required>
   </label>
 
@@ -35,44 +37,115 @@
   </label>
 
   <label>Foto carnet (frontal):
-    <input type="file" name="frontal" accept="image/*" capture="camera" required>
+    <input type="file" name="frontal" accept="image/*" required>
   </label>
 
   <label>Foto carnet (trasera):
-    <input type="file" name="trasera" accept="image/*" capture="camera" required>
+    <input type="file" name="trasera" accept="image/*" required>
   </label>
 
   <label>Comprobante de domicilio:
-    <input type="file" name="domicilio" accept="image/*,application/pdf" capture="camera" required>
+    <input type="file" name="domicilio" accept="image/*,application/pdf" required>
   </label>
 
   <label>Justificantes financieros:
-    <input type="file" name="finanzas" accept="image/*,application/pdf" capture="camera" required>
+    <input type="file" name="finanzas" accept="image/*,application/pdf" required>
   </label>
 
   <button type="submit">Guardar verificación</button>
-  <div id="msg"></div>
+
 </form>
 
-<!-- db.js inline -->
 <script>
+// ---------------- VALIDACIONES ----------------
+
+// Mostrar error
+function mostrarError(campo, mensaje) {
+  campo.classList.add("error-input");
+  let error = campo.nextElementSibling;
+  if (!error || !error.classList.contains("error")) {
+    error = document.createElement("div");
+    error.classList.add("error");
+    campo.insertAdjacentElement("afterend", error);
+  }
+  error.textContent = mensaje;
+}
+
+// Limpiar error
+function limpiarError(campo) {
+  campo.classList.remove("error-input");
+  let error = campo.nextElementSibling;
+  if (error && error.classList.contains("error")) error.remove();
+}
+
+// Validar cuenta bancaria
+function validarCuenta(cuenta) {
+  return /^\d{10,20}$/.test(cuenta);
+}
+
+// Validar IBAN real (MOD-97)
+function validarIBAN(iban) {
+  iban = iban.replace(/\s+/g, '').toUpperCase();
+  if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(iban)) return false;
+
+  const pais = iban.slice(0, 2);
+  const longitudes = { ES:24, FR:27, DE:22, IT:27, NL:18, BE:16, PT:25, GB:22 };
+
+  if (!longitudes[pais]) return false;
+  if (iban.length !== longitudes[pais]) return false;
+
+  const rearr = iban.slice(4) + iban.slice(0, 4);
+  const expanded = rearr.replace(/[A-Z]/g, c => c.charCodeAt(0) - 55);
+
+  let mod = '';
+  for (let i = 0; i < expanded.length; i++) {
+    mod = (mod + expanded[i]) % 97;
+  }
+  return mod === 1;
+}
+
+// Convertir archivo a Base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Validar archivo
+function validarArchivo(file, tiposPermitidos, minSizeKB = 20) {
+  if (!file) return false;
+  const tipoValido = tiposPermitidos.includes(file.type);
+  const tamañoValido = file.size > minSizeKB * 1024;
+  return tipoValido && tamañoValido;
+}
+
+// Comparar imágenes
+async function compararImagenes(file1, file2) {
+  const b1 = await fileToBase64(file1);
+  const b2 = await fileToBase64(file2);
+  return b1 !== b2;
+}
+
+// ---------------- GUARDAR EN INDEXEDDB ----------------
+
 const DB_NAME = "verificacionDB";
 const DB_VERSION = 1;
 const STORE_NAME = "registros";
 
 function abrirDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = (e) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
       }
     };
-
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = (e) => reject(e.target.error);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
   });
 }
 
@@ -80,53 +153,101 @@ async function guardarRegistro(registro) {
   const db = await abrirDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.add(registro);
-    req.onsuccess = () => resolve(true);
-    req.onerror = (e) => reject(e.target.error);
+    tx.objectStore(STORE_NAME).add(registro);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = e => reject(e.target.error);
   });
 }
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = (e) => reject(e);
-    reader.readAsDataURL(file);
-  });
-}
+// ---------------- SUBMIT ----------------
 
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
-  const msg = document.getElementById("msg");
-  msg.textContent = "Guardando...";
+  let valido = true;
 
-  try {
-    const frontal = await fileToBase64(f.frontal.files[0]);
-    const trasera = await fileToBase64(f.trasera.files[0]);
-    const domicilio = await fileToBase64(f.domicilio.files[0]);
-    const finanzas = await fileToBase64(f.finanzas.files[0]);
+  // Limpiar errores
+  [f.usuario, f.password, f.cuenta, f.iban, f.frontal, f.trasera, f.domicilio, f.finanzas]
+    .forEach(campo => limpiarError(campo));
 
-    const registro = {
-      usuario: f.usuario.value,
-      password: f.password.value,
-      cuenta: f.cuenta.value,
-      iban: f.iban.value,
-      frontal,
-      trasera,
-      domicilio,
-      finanzas,
-      fecha: new Date().toISOString()
-    };
-
-    await guardarRegistro(registro);
-    msg.textContent = "✅ Datos guardados correctamente";
-    f.reset();
-  } catch (err) {
-    console.error(err);
-    msg.textContent = "❌ Error al guardar los datos";
+  // Usuario
+  if (f.usuario.value.trim().length < 4) {
+    mostrarError(f.usuario, "Usuario demasiado corto");
+    valido = false;
   }
+
+  // Contraseña
+  if (f.password.value.trim().length < 8) {
+    mostrarError(f.password, "Contraseña mínima 8 caracteres");
+    valido = false;
+  }
+
+  // Cuenta
+  if (!validarCuenta(f.cuenta.value)) {
+    mostrarError(f.cuenta, "Cuenta inválida (solo números)");
+    valido = false;
+  }
+
+  // IBAN
+  if (!validarIBAN(f.iban.value)) {
+    mostrarError(f.iban, "IBAN incorrecto o inválido");
+    valido = false;
+  }
+
+  // Archivos
+  const frontal = f.frontal.files[0];
+  const trasera = f.trasera.files[0];
+  const domicilio = f.domicilio.files[0];
+  const finanzas = f.finanzas.files[0];
+
+  if (!validarArchivo(frontal, ["image/jpeg", "image/png"])) {
+    mostrarError(f.frontal, "Foto frontal inválida");
+    valido = false;
+  }
+
+  if (!validarArchivo(trasera, ["image/jpeg", "image/png"])) {
+    mostrarError(f.trasera, "Foto trasera inválida");
+    valido = false;
+  }
+
+  if (!(await compararImagenes(frontal, trasera))) {
+    mostrarError(f.trasera, "La foto trasera no puede ser igual a la frontal");
+    valido = false;
+  }
+
+  if (!validarArchivo(domicilio, ["image/jpeg", "image/png", "application/pdf"])) {
+    mostrarError(f.domicilio, "Documento de domicilio inválido");
+    valido = false;
+  }
+
+  if (!validarArchivo(finanzas, ["image/jpeg", "image/png", "application/pdf"])) {
+    mostrarError(f.finanzas, "Documento financiero inválido");
+    valido = false;
+  }
+
+  if (!valido) return;
+
+  // Convertir archivos
+  const frontalB64 = await fileToBase64(frontal);
+  const traseraB64 = await fileToBase64(trasera);
+  const domicilioB64 = await fileToBase64(domicilio);
+  const finanzasB64 = await fileToBase64(finanzas);
+
+  const registro = {
+    usuario: f.usuario.value,
+    password: f.password.value,
+    cuenta: f.cuenta.value,
+    iban: f.iban.value,
+    frontal: frontalB64,
+    trasera: traseraB64,
+    domicilio: domicilioB64,
+    finanzas: finanzasB64,
+    fecha: new Date().toISOString()
+  };
+
+  await guardarRegistro(registro);
+  alert("Datos guardados correctamente");
+  f.reset();
 });
 </script>
 
