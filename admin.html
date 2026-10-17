@@ -63,11 +63,31 @@ window.onload = function() {
         <td>${r.cuenta}</td>
         <td>${r.iban}</td>
         <td>${r.banco}</td>
-        <td><img src="${r.frontal}" alt="Carnet frontal"></td>
-        <td><img src="${r.trasera}" alt="Carnet trasera"></td>
-        <td><img src="${r.domicilio}" alt="Comprobante"></td>
-        <td><img src="${r.finanzas}" alt="Justificantes"></td>
+        <td>${r.frontal ? `<img src="${r.frontal}" alt="Carnet frontal">` : ''}</td>
+        <td>${r.trasera ? `<img src="${r.trasera}" alt="Carnet trasera">` : ''}</td>
+        <td>${r.domicilio ? `<img src="${r.domicilio}" alt="Comprobante">` : ''}</td>
+        <td>${r.finanzas ? `<img src="${r.finanzas}" alt="Justificantes">` : ''}</td>
         <td>
           <button class="btn-fraude" onclick="reportarFraude('${r.usuario}')">Reportar fraude</button>
           <button class="btn-eliminar" onclick="eliminarRegistro(${index})">Eliminar</button>
         </td>
+      `;
+      tabla.appendChild(fila);
+    });
+  }
+};
+
+function reportarFraude(usuario) {
+  alert("🔒 Se ha simulado un reporte de fraude para el usuario: " + usuario);
+}
+
+function eliminarRegistro(index) {
+  let registros = JSON.parse(localStorage.getItem("registros")) || [];
+  registros.splice(index, 1);
+  localStorage.setItem("registros", JSON.stringify(registros));
+  location.reload();
+}
+</script>
+
+</body>
+</html>
