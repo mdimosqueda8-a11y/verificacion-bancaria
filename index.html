@@ -3,16 +3,107 @@
 <head>
 <meta charset="UTF-8">
 <title>Verificación Bancaria</title>
+
 <style>
-  body { font-family: Arial; background:#f4f6f9; margin:20px; }
-  h1 { text-align:center; color:#003366; }
-  form { max-width:420px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 5px rgba(0,0,0,0.1); }
-  label { display:block; margin-top:10px; }
-  input { width:100%; padding:8px; margin-top:5px; }
-  button { margin-top:15px; padding:10px 20px; background:#003366; color:#fff; border:none; border-radius:5px; cursor:pointer; width:100%; }
-  .error { color:red; font-size:14px; margin-top:4px; }
-  .error-input { border:2px solid red; }
+  body {
+    font-family: Arial;
+    background:#eef2f7;
+    margin:0;
+    padding:0;
+  }
+
+  h1 {
+    text-align:center;
+    color:#003366;
+    margin-top:25px;
+  }
+
+  form {
+    max-width:450px;
+    margin:25px auto;
+    background:#fff;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.15);
+  }
+
+  label {
+    display:block;
+    margin-top:12px;
+    font-weight:bold;
+  }
+
+  input {
+    width:100%;
+    padding:10px;
+    margin-top:6px;
+    border:1px solid #ccc;
+    border-radius:6px;
+    font-size:15px;
+  }
+
+  button {
+    margin-top:20px;
+    padding:12px;
+    background:#003366;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    width:100%;
+    font-size:16px;
+  }
+
+  .error {
+    color:red;
+    font-size:14px;
+    margin-top:4px;
+  }
+
+  .error-input {
+    border:2px solid red !important;
+  }
+
+  /* MODAL */
+  .modal-overlay {
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.6);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+  }
+
+  .modal-box {
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    width:80%;
+    max-width:350px;
+    text-align:center;
+    box-shadow:0 0 10px rgba(0,0,0,0.3);
+  }
+
+  .modal-box h2 {
+    margin-bottom:15px;
+    color:#003366;
+  }
+
+  .modal-box button {
+    background:#003366;
+    color:white;
+    padding:10px 20px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    margin-top:15px;
+  }
 </style>
+
 </head>
 <body>
 
@@ -56,8 +147,72 @@
 
 </form>
 
+<!-- MODAL DE ÉXITO -->
+<div id="modalExito" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <h2>✔ Verificación guardada</h2>
+    <p>Los datos fueron almacenados correctamente.</p>
+    <button onclick="cerrarModalExito()">Cerrar</button>
+  </div>
+</div>
+
 <script>
-// ---------------- VALIDACIONES ----------------
+
+/* ---------------- FUNCIONES NUEVAS ---------------- */
+
+function mostrarModalExito() {
+  document.getElementById("modalExito").style.display = "flex";
+
+  // Abrir ventana nueva con mensaje profesional
+  const nuevaVentana = window.open("", "_blank");
+  nuevaVentana.document.write(`
+    <html>
+    <head>
+      <title>Verificación enviada</title>
+      <style>
+        body {
+          font-family: Arial;
+          background:#eef2f7;
+          padding:40px;
+          text-align:center;
+        }
+        .box {
+          background:white;
+          padding:25px;
+          border-radius:10px;
+          max-width:400px;
+          margin:auto;
+          box-shadow:0 0 10px rgba(0,0,0,0.2);
+        }
+        h2 {
+          color:#003366;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="box">
+        <h2>✔ Su cuenta fue enviada con éxito</h2>
+        <p>Su verificación está en proceso.</p>
+        <p>Recibirá respuesta en un máximo de <strong>72 horas</strong>.</p>
+      </div>
+    </body>
+    </html>
+  `);
+}
+
+function cerrarModalExito() {
+  document.getElementById("modalExito").style.display = "none";
+}
+
+function irAlPrimerError(formulario) {
+  const campos = formulario.querySelectorAll(".error-input");
+  if (campos.length > 0) {
+    campos[0].scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
+/* ---------------- VALIDACIONES ---------------- */
+
 function mostrarError(campo, mensaje) {
   campo.classList.add("error-input");
   let error = campo.nextElementSibling;
@@ -117,7 +272,8 @@ async function compararImagenes(file1, file2) {
   return b1 !== b2;
 }
 
-// ---------------- INDEXEDDB ----------------
+/* ---------------- INDEXEDDB ---------------- */
+
 const DB_NAME = "verificacionDB";
 const DB_VERSION = 1;
 const STORE_NAME = "registros";
@@ -146,7 +302,8 @@ async function guardarRegistro(registro) {
   });
 }
 
-// ---------------- SUBMIT ----------------
+/* ---------------- SUBMIT ---------------- */
+
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
@@ -205,7 +362,11 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     valido = false;
   }
 
-  if (!valido) return;
+  /* CAMBIO 3 */
+  if (!valido) {
+    irAlPrimerError(f);
+    return;
+  }
 
   const frontalB64 = await fileToBase64(frontal);
   const traseraB64 = await fileToBase64(trasera);
@@ -225,7 +386,10 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   };
 
   await guardarRegistro(registro);
-  alert("✅ Datos guardados correctamente");
+
+  /* CAMBIO 2 */
+  mostrarModalExito();
+
   f.reset();
 });
 </script>
