@@ -1,20 +1,16 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Panel Administrador</title>
-  <style>
-    body { font-family: Arial; background:#f4f6f9; margin:20px; }
-    h1 { text-align:center; color:#003366; }
-    table { width:100%; border-collapse:collapse; margin-top:20px; background:#fff; }
-    th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-    th { background:#003366; color:#fff; }
-    img { max-width:120px; border-radius:5px; }
-    button { padding:6px 10px; border:none; border-radius:4px; cursor:pointer; }
-    .btn-eliminar { background:#cc0000; color:#fff; }
-    .btn-reporte { background:#ff9900; color:#fff; margin-left:4px; }
-    #msg { margin-top:10px; text-align:center; }
-  </style>
+<meta charset="UTF-8">
+<title>Panel Administrador</title>
+<style>
+  body { font-family: Arial; background:#eef2f7; padding:20px; }
+  h1 { text-align:center; color:#003366; }
+  table { width:100%; border-collapse:collapse; margin-top:20px; }
+  th, td { border:1px solid #ccc; padding:10px; text-align:left; }
+  th { background:#003366; color:white; }
+  img { width:120px; border-radius:6px; }
+</style>
 </head>
 <body>
 
@@ -25,7 +21,6 @@
     <tr>
       <th>ID</th>
       <th>Usuario</th>
-      <th>Contraseña</th>
       <th>Cuenta</th>
       <th>IBAN</th>
       <th>Frontal</th>
@@ -33,13 +28,10 @@
       <th>Domicilio</th>
       <th>Finanzas</th>
       <th>Fecha</th>
-      <th>Acciones</th>
     </tr>
   </thead>
   <tbody id="tabla"></tbody>
 </table>
-
-<div id="msg"></div>
 
 <script>
 const DB_NAME = "verificacionDB";
@@ -48,101 +40,42 @@ const STORE_NAME = "registros";
 
 function abrirDB() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
-
-    request.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-      }
-    };
-
-    request.onsuccess = (e) => resolve(e.target.result);
-    request.onerror = (e) => reject(e.target.error);
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
   });
 }
 
-async function obtenerRegistros() {
+async function cargarRegistros() {
   const db = await abrirDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readonly");
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = (e) => reject(e.target.error);
-  });
-}
+  const tx = db.transaction(STORE_NAME, "readonly");
+  const store = tx.objectStore(STORE_NAME);
+  const req = store.getAll();
 
-async function eliminarRegistro(id) {
-  const db = await abrirDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    const store = tx.objectStore(STORE_NAME);
-    const req = store.delete(id);
-    req.onsuccess = () => resolve(true);
-    req.onerror = (e) => reject(e.target.error);
-  });
-}
+  req.onsuccess = () => {
+    const datos = req.result;
+    const tabla = document.getElementById("tabla");
+    tabla.innerHTML = "";
 
-async function cargarTabla() {
-  const tabla = document.getElementById("tabla");
-  const msg = document.getElementById("msg");
-  tabla.innerHTML = "";
-  msg.textContent = "Cargando...";
-
-  try {
-    const registros = await obtenerRegistros();
-    if (!registros.length) {
-      tabla.innerHTML = `<tr><td colspan="11">No hay registros. Primero llena el formulario en index.html.</td></tr>`;
-      msg.textContent = "";
-      return;
-    }
-
-    registros.forEach(r => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${r.id}</td>
-        <td>${r.usuario}</td>
-        <td>${r.password}</td>
-        <td>${r.cuenta}</td>
-        <td>${r.iban}</td>
-        <td>${r.frontal ? `<img src="${r.frontal}" alt="Frontal">` : ""}</td>
-        <td>${r.trasera ? `<img src="${r.trasera}" alt="Trasera">` : ""}</td>
-        <td>${r.domicilio ? `<img src="${r.domicilio}" alt="Domicilio">` : ""}</td>
-        <td>${r.finanzas ? `<img src="${r.finanzas}" alt="Finanzas">` : ""}</td>
-        <td>${r.fecha ? new Date(r.fecha).toLocaleString() : ""}</td>
-        <td>
-          <button class="btn-eliminar" onclick="handleEliminar(${r.id})">Eliminar</button>
-          <button class="btn-reporte" onclick="handleReporte('${r.usuario}')">Reportar</button>
-        </td>
+    datos.forEach(reg => {
+      tabla.innerHTML += `
+        <tr>
+          <td>${reg.id}</td>
+          <td>${reg.usuario}</td>
+          <td>${reg.cuenta}</td>
+          <td>${reg.iban}</td>
+          <td><img src="${reg.frontal}"></td>
+          <td><img src="${reg.trasera}"></td>
+          <td><img src="${reg.domicilio}"></td>
+          <td><img src="${reg.finanzas}"></td>
+          <td>${reg.fecha}</td>
+        </tr>
       `;
-      tabla.appendChild(tr);
     });
-    msg.textContent = "";
-  } catch (err) {
-    console.error(err);
-    msg.textContent = "❌ Error al cargar registros";
-  }
+  };
 }
 
-async function handleEliminar(id) {
-  const msg = document.getElementById("msg");
-  msg.textContent = "Eliminando...";
-  try {
-    await eliminarRegistro(id);
-    msg.textContent = "✅ Registro eliminado";
-    cargarTabla();
-  } catch (err) {
-    console.error(err);
-    msg.textContent = "❌ Error al eliminar registro";
-  }
-}
-
-function handleReporte(usuario) {
-  alert("🔒 Se ha simulado un reporte para el usuario: " + usuario);
-}
-
-cargarTabla();
+cargarRegistros();
 </script>
 
 </body>
