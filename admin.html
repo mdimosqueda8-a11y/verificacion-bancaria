@@ -4,106 +4,121 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Administrador - Verificación Digital</title>
+<title>Verificación Digital</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-
-body {
-  font-family: Arial, sans-serif;
-  background: #eef2f7;
-  margin: 0;
-  padding: 20px;
-}
-
-h1 {
-  text-align: center;
-  color: #003366;
-}
-
-#contenedor {
-  max-width: 1100px;
-  margin: 20px auto;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,.15);
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-th,
-td {
-  border: 1px solid #ddd;
-  padding: 10px;
-  text-align: left;
-}
-
-th {
-  background: #003366;
-  color: white;
-}
-
-#mensaje {
-  padding: 12px;
-  margin-bottom: 15px;
-  background: #f1f1f1;
-  border-radius: 6px;
-}
-
-@media (max-width: 700px) {
-
-  #contenedor {
-    overflow-x: auto;
+  body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    margin: 0;
+    padding: 20px;
   }
 
-  table {
-    min-width: 750px;
+  h1 {
+    text-align: center;
+    color: #003366;
   }
 
-}
+  form {
+    max-width: 450px;
+    margin: 25px auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,.15);
+  }
 
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+
+  button {
+    margin-top: 22px;
+    padding: 13px;
+    background: #003366;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 16px;
+  }
+
+  button:disabled {
+    background: #888;
+    cursor: not-allowed;
+  }
+
+  #mensaje {
+    max-width: 450px;
+    margin: 15px auto;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    display: none;
+  }
+
+  .ok {
+    background: #d9f7df;
+    color: #176b2c;
+  }
+
+  .error {
+    background: #ffdede;
+    color: #9b0000;
+  }
 </style>
 </head>
 
 <body>
 
-<h1>Administrador de Verificación Digital</h1>
+<h1>Verificación Digital</h1>
 
-<div id="contenedor">
+<form id="form">
 
-  <div id="mensaje">
-    Cargando solicitudes...
-  </div>
+  <label>
+    Nombre
+    <input type="text" name="nombre" required>
+  </label>
 
-  <table>
+  <label>
+    Correo electrónico
+    <input type="email" name="correo" required>
+  </label>
 
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Nombre</th>
-        <th>Correo</th>
-        <th>Teléfono</th>
-        <th>Motivo</th>
-        <th>Estado</th>
-        <th>Fecha</th>
-      </tr>
-    </thead>
+  <label>
+    Teléfono
+    <input type="tel" name="telefono" required>
+  </label>
 
-    <tbody id="tabla">
-    </tbody>
+  <label>
+    Motivo de la verificación
+    <input type="text" name="motivo" required>
+  </label>
 
-  </table>
+  <button type="submit" id="boton">
+    Enviar solicitud
+  </button>
 
-</div>
+</form>
+
+<div id="mensaje"></div>
 
 <script>
-
 const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
 
@@ -113,61 +128,75 @@ const supabaseClient =
     SUPABASE_ANON_KEY
   );
 
-async function cargarRegistros() {
+const form = document.getElementById("form");
+const boton = document.getElementById("boton");
+const mensaje = document.getElementById("mensaje");
 
-  const mensaje = document.getElementById("mensaje");
-  const tabla = document.getElementById("tabla");
+function mostrarMensaje(texto, tipo) {
+  mensaje.textContent = texto;
+  mensaje.className = tipo;
+  mensaje.style.display = "block";
+}
 
-  const { data, error } = await supabaseClient
-    .from("usuario_verificaciones")
-    .select("*")
-    .order("fecha", { ascending: false });
+form.addEventListener("submit", async function(e) {
 
-  if (error) {
+  e.preventDefault();
+
+  boton.disabled = true;
+  boton.textContent = "Enviando...";
+
+  mensaje.style.display = "none";
+
+  const registro = {
+    nombre: form.nombre.value.trim(),
+    correo: form.correo.value.trim(),
+    telefono: form.telefono.value.trim(),
+    motivo: form.motivo.value.trim(),
+    estado: "Pendiente",
+    fecha: new Date().toISOString()
+  };
+
+  try {
+
+    const { error } = await supabaseClient
+      .from("usuario_verificaciones")
+      .insert([registro]);
+
+    if (error) {
+      console.error(error);
+
+      mostrarMensaje(
+        "No se pudo enviar la solicitud. Inténtalo nuevamente.",
+        "error"
+      );
+
+      return;
+    }
+
+    form.reset();
+
+    mostrarMensaje(
+      "Solicitud enviada correctamente. Será revisada por el administrador.",
+      "ok"
+    );
+
+  } catch (error) {
 
     console.error(error);
 
-    mensaje.textContent =
-      "No se pudieron cargar las solicitudes.";
+    mostrarMensaje(
+      "Ocurrió un error de conexión.",
+      "error"
+    );
 
-    return;
+  } finally {
+
+    boton.disabled = false;
+    boton.textContent = "Enviar solicitud";
+
   }
 
-  tabla.innerHTML = "";
-
-  if (!data || data.length === 0) {
-
-    mensaje.textContent =
-      "No hay solicitudes todavía.";
-
-    return;
-  }
-
-  mensaje.textContent =
-    "Solicitudes recibidas: " + data.length;
-
-  data.forEach(function(r) {
-
-    const fila = document.createElement("tr");
-
-    fila.innerHTML = `
-      <td>${r.id ?? ""}</td>
-      <td>${r.nombre ?? ""}</td>
-      <td>${r.correo ?? ""}</td>
-      <td>${r.telefono ?? ""}</td>
-      <td>${r.motivo ?? ""}</td>
-      <td>${r.estado ?? "Pendiente"}</td>
-      <td>${r.fecha ?? ""}</td>
-    `;
-
-    tabla.appendChild(fila);
-
-  });
-
-}
-
-cargarRegistros();
-
+});
 </script>
 
 </body>
