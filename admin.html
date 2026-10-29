@@ -1,203 +1,152 @@
-<!DOCTYPE html>
-<html lang="es">
+
+<!DOCTYPE html><html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Administrador - Verificación Digital</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
 
-<title>Verificación Digital</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #eef2f7;
-    margin: 0;
-    padding: 20px;
-  }
-
-  h1 {
-    text-align: center;
-    color: #003366;
-  }
-
-  form {
-    max-width: 450px;
-    margin: 25px auto;
-    background: #fff;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,.15);
-  }
-
-  label {
-    display: block;
-    margin-top: 15px;
-    font-weight: bold;
-  }
-
-  input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 11px;
-    margin-top: 6px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 15px;
-  }
-
-  button {
-    margin-top: 22px;
-    padding: 13px;
-    background: #003366;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 16px;
-  }
-
-  button:disabled {
-    background: #888;
-    cursor: not-allowed;
-  }
-
-  #mensaje {
-    max-width: 450px;
-    margin: 15px auto;
-    padding: 12px;
-    border-radius: 6px;
-    text-align: center;
-    display: none;
-  }
-
-  .ok {
-    background: #d9f7df;
-    color: #176b2c;
-  }
-
-  .error {
-    background: #ffdede;
-    color: #9b0000;
-  }
-</style>
-</head>
-
-<body>
-
-<h1>Verificación Digital</h1>
-
-<form id="form">
-
-  <label>
-    Nombre
-    <input type="text" name="nombre" required>
-  </label>
-
-  <label>
-    Correo electrónico
-    <input type="email" name="correo" required>
-  </label>
-
-  <label>
-    Teléfono
-    <input type="tel" name="telefono" required>
-  </label>
-
-  <label>
-    Motivo de la verificación
-    <input type="text" name="motivo" required>
-  </label>
-
-  <button type="submit" id="boton">
-    Enviar solicitud
-  </button>
-
-</form>
-
-<div id="mensaje"></div>
-
-<script>
-const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
-
-const supabaseClient =
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
-
-const form = document.getElementById("form");
-const boton = document.getElementById("boton");
-const mensaje = document.getElementById("mensaje");
-
-function mostrarMensaje(texto, tipo) {
-  mensaje.textContent = texto;
-  mensaje.className = tipo;
-  mensaje.style.display = "block";
+* {
+  box-sizing: border-box;
 }
 
-form.addEventListener("submit", async function(e) {
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+  color: #222;
+}
 
-  e.preventDefault();
+h1 {
+  text-align: center;
+  color: #003366;
+}
 
-  boton.disabled = true;
-  boton.textContent = "Enviando...";
+#contenedor {
+  max-width: 1200px;
+  margin: 20px auto;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.12);
+}
 
-  mensaje.style.display = "none";
+#barra {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
 
-  const registro = {
-    nombre: form.nombre.value.trim(),
-    correo: form.correo.value.trim(),
-    telefono: form.telefono.value.trim(),
-    motivo: form.motivo.value.trim(),
-    estado: "Pendiente",
-    fecha: new Date().toISOString()
-  };
+#busqueda {
+  flex: 1;
+  min-width: 220px;
+  padding: 11px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  font-size: 15px;
+}
 
-  try {
+#actualizar {
+  padding: 11px 18px;
+  border: none;
+  border-radius: 7px;
+  background: #003366;
+  color: white;
+  cursor: pointer;
+}
 
-    const { error } = await supabaseClient
-      .from("usuario_verificaciones")
-      .insert([registro]);
+#mensaje {
+  padding: 12px;
+  margin-bottom: 15px;
+  background: #f1f1f1;
+  border-radius: 7px;
+}
 
-    if (error) {
-      console.error(error);
+.tabla-contenedor {
+  overflow-x: auto;
+}
 
-      mostrarMensaje(
-        "No se pudo enviar la solicitud. Inténtalo nuevamente.",
-        "error"
-      );
+table {
+  width: 100%;
+  min-width: 950px;
+  border-collapse: collapse;
+}
 
-      return;
-    }
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
 
-    form.reset();
+th {
+  background: #003366;
+  color: white;
+}
 
-    mostrarMensaje(
-      "Solicitud enviada correctamente. Será revisada por el administrador.",
-      "ok"
-    );
+.btn-eliminar {
+  background: #c62828;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
 
-  } catch (error) {
+.btn-eliminar:hover {
+  background: #a91f1f;
+}
 
-    console.error(error);
+.estado {
+  font-weight: bold;
+}
 
-    mostrarMensaje(
-      "Ocurrió un error de conexión.",
-      "error"
-    );
+@media (max-width: 700px) {
 
-  } finally {
-
-    boton.disabled = false;
-    boton.textContent = "Enviar solicitud";
-
+  body {
+    padding: 10px;
   }
 
-});
-</script>
+  #contenedor {
+    padding: 12px;
+  }
 
-</body>
+}
+
+</style></head><body><h1>Administrador de Verificación Digital</h1><div id="contenedor">  <div id="barra"><input
+  type="search"
+  id="busqueda"
+  placeholder="Buscar por nombre, correo o teléfono..."
+>
+
+<button id="actualizar" type="button">
+  Actualizar
+</button>
+
+  </div>  <div id="mensaje">
+    Cargando solicitudes...
+  </div>  <div class="tabla-contenedor"><table>
+
+  <thead>
+
+    <tr>
+      <th>ID</th>
+      <th>Nombre</th>
+      <th>Correo</th>
+      <th>Teléfono</th>
+      <th>Motivo</th>
+      <th>Estado</th>
+      <th>Fecha</th>
+      <th>Acciones</th>
+    </tr>
+
+  </thead>
+
+  <tbody id="tabla">
+  </tbody>
+
+</table>
+
+  </div></div><script src="admin.js"></script></body>
 </html>
