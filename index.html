@@ -1,200 +1,151 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verificación Digital</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Verificación Digital</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+* {
+  box-sizing: border-box;
+}
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+body {
+  margin: 0;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+  color: #222;
+}
 
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #eef2f7;
-    margin: 0;
-    padding: 20px;
-  }
+.contenedor {
+  width: 100%;
+  max-width: 500px;
+  margin: 30px auto;
+}
 
-  h1 {
-    text-align: center;
-    color: #003366;
-  }
+h1 {
+  text-align: center;
+  color: #003366;
+  margin-bottom: 10px;
+}
 
-  form {
-    max-width: 450px;
-    margin: 25px auto;
-    background: white;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,.15);
-  }
+.subtitulo {
+  text-align: center;
+  color: #666;
+  margin-bottom: 25px;
+}
 
-  label {
-    display: block;
-    margin-top: 15px;
-    font-weight: bold;
-  }
+form {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.12);
+}
 
-  input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 11px;
-    margin-top: 6px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 15px;
-  }
+.campo {
+  margin-bottom: 18px;
+}
 
-  button {
-    margin-top: 22px;
-    padding: 13px;
-    background: #003366;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 16px;
-  }
+label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 7px;
+}
 
-  button:disabled {
-    background: #888;
-    cursor: not-allowed;
-  }
+input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 7px;
+  font-size: 16px;
+}
 
-  #mensaje {
-    max-width: 450px;
-    margin: 15px auto;
-    padding: 12px;
-    border-radius: 6px;
-    text-align: center;
-    display: none;
-  }
+input:focus {
+  outline: none;
+  border-color: #003366;
+}
 
-  .ok {
-    background: #d9f7df;
-    color: #176b2c;
-  }
+button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 7px;
+  background: #003366;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-  .error {
-    background: #ffdede;
-    color: #9b0000;
-  }
-</style>
-</head>
+button:disabled {
+  background: #888;
+  cursor: not-allowed;
+}
 
-<body>
+#mensaje {
+  display: none;
+  margin-top: 18px;
+  padding: 14px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+}
 
-<h1>Verificación Digital</h1>
+.exito {
+  display: block !important;
+  background: #d9f7df;
+  color: #176b2c;
+}
 
-<form id="form">
+.error {
+  display: block !important;
+  background: #ffdede;
+  color: #9b0000;
+}
+</style></head><body><div class="contenedor">  <h1>Verificación Digital</h1>  <div class="subtitulo">
+    Complete los datos para enviar su solicitud.
+  </div>  <form id="formulario"><div class="campo">
+  <label for="nombre">Nombre</label>
+  <input
+    type="text"
+    id="nombre"
+    name="nombre"
+    required
+  >
+</div>
 
-  <label>
-    Nombre
-    <input type="text" name="nombre" required>
-  </label>
+<div class="campo">
+  <label for="correo">Correo electrónico</label>
+  <input
+    type="email"
+    id="correo"
+    name="correo"
+    required
+  >
+</div>
 
-  <label>
-    Correo electrónico
-    <input type="email" name="correo" required>
-  </label>
+<div class="campo">
+  <label for="telefono">Teléfono</label>
+  <input
+    type="tel"
+    id="telefono"
+    name="telefono"
+    required
+  >
+</div>
 
-  <label>
-    Teléfono
-    <input type="tel" name="telefono" required>
-  </label>
+<div class="campo">
+  <label for="motivo">Motivo de la verificación</label>
+  <input
+    type="text"
+    id="motivo"
+    name="motivo"
+    required
+  >
+</div>
 
-  <label>
-    Motivo de la verificación
-    <input type="text" name="motivo" required>
-  </label>
-
-  <button type="submit" id="boton">
-    Enviar solicitud
-  </button>
-
-</form>
+<button type="submit" id="boton">
+  Enviar solicitud
+</button>
 
 <div id="mensaje"></div>
 
-<script>
-const SUPABASE_URL = "TU_SUPABASE_URL";
-const SUPABASE_ANON_KEY = "TU_SUPABASE_PUBLISHABLE_KEY";
-
-const supabaseClient =
-  window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
-
-const form = document.getElementById("form");
-const boton = document.getElementById("boton");
-const mensaje = document.getElementById("mensaje");
-
-function mostrarMensaje(texto, tipo) {
-  mensaje.textContent = texto;
-  mensaje.className = tipo;
-  mensaje.style.display = "block";
-}
-
-form.addEventListener("submit", async function(e) {
-
-  e.preventDefault();
-
-  boton.disabled = true;
-  boton.textContent = "Enviando...";
-
-  mensaje.style.display = "none";
-
-  const registro = {
-    nombre: form.nombre.value.trim(),
-    correo: form.correo.value.trim(),
-    telefono: form.telefono.value.trim(),
-    motivo: form.motivo.value.trim(),
-    estado: "Pendiente",
-    fecha: new Date().toISOString()
-  };
-
-  try {
-
-    const { error } = await supabaseClient
-      .from("usuario_verificaciones")
-      .insert([registro]);
-
-    if (error) {
-      console.error(error);
-      mostrarMensaje(
-        "No se pudo enviar la solicitud. Inténtalo nuevamente.",
-        "error"
-      );
-      return;
-    }
-
-    form.reset();
-
-    mostrarMensaje(
-      "Solicitud enviada correctamente. Será revisada por el administrador.",
-      "ok"
-    );
-
-  } catch (error) {
-
-    console.error(error);
-
-    mostrarMensaje(
-      "Ocurrió un error de conexión.",
-      "error"
-    );
-
-  } finally {
-
-    boton.disabled = false;
-    boton.textContent = "Enviar solicitud";
-
-  }
-
-});
-</script>
-
-</body>
+  </form></div><script src="script.js"></script></body>
 </html>
