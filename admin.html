@@ -1,164 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>Administrador - Verificación Digital</title>
+<title>Administrador</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-
-* {
-  box-sizing: border-box;
+/* Igual que tu versión anterior */
+img {
+  width: 120px;
+  border-radius: 8px;
+  object-fit: cover;
 }
-
-body {
-  margin: 0;
-  padding: 20px;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #eef4fa;
-  color: #1f2937;
-}
-
-h1 {
-  text-align: center;
-  color: #0b3a68;
-  margin-bottom: 25px;
-}
-
-#contenedor {
-  max-width: 1250px;
-  margin: auto;
-  background: white;
-  padding: 20px;
-  border-radius: 14px;
-  box-shadow: 0 5px 25px rgba(15,45,75,.10);
-}
-
-#barra {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-  flex-wrap: wrap;
-}
-
-#busqueda {
-  flex: 1;
-  min-width: 220px;
-  padding: 11px;
-  border: 1px solid #cbd5e1;
-  border-radius: 7px;
-  font-size: 15px;
-}
-
-#actualizar {
-  width: auto;
-  margin: 0;
-  padding: 11px 18px;
-  border: none;
-  border-radius: 7px;
-  background: #0b3a68;
-  color: white;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-#mensaje {
-  padding: 12px;
-  margin-bottom: 15px;
-  background: #f1f5f9;
-  border-radius: 7px;
-}
-
-.tabla-contenedor {
-  overflow-x: auto;
-}
-
-table {
-  width: 100%;
-  min-width: 1100px;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  border: 1px solid #dbe3eb;
-  padding: 10px;
-  text-align: left;
-}
-
-th {
-  background: #0b3a68;
-  color: white;
-}
-
-select {
-  padding: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font-weight: bold;
-  background: white;
-}
-
-.btn-eliminar {
-  background: #c62828;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 12px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.btn-eliminar:hover {
-  background: #a91f1f;
-}
-
-.estado-pendiente {
-  border-color: #d6a800;
-  background: #fff9db;
-  color: #795700;
-}
-
-.estado-revision {
-  border-color: #1976b8;
-  background: #eaf5ff;
-  color: #14527d;
-}
-
-.estado-aprobado {
-  border-color: #2e8b57;
-  background: #e8f7ee;
-  color: #176b3a;
-}
-
-.estado-rechazado {
-  border-color: #c62828;
-  background: #fff0f0;
-  color: #a12622;
-}
-
-@media (max-width: 700px) {
-
-  body {
-    padding: 10px;
-  }
-
-  #contenedor {
-    padding: 12px;
-  }
-
-}
-
 </style>
-
 </head>
 
 <body>
@@ -168,49 +25,31 @@ select {
 <div id="contenedor">
 
   <div id="barra">
-
-    <input
-      type="search"
-      id="busqueda"
-      placeholder="Buscar por nombre, correo o teléfono..."
-    >
-
-    <button
-      id="actualizar"
-      type="button"
-    >
-      Actualizar
-    </button>
-
+    <input type="search" id="busqueda" placeholder="Buscar...">
+    <button id="actualizar">Actualizar</button>
   </div>
 
-  <div id="mensaje">
-    Cargando solicitudes...
-  </div>
+  <div id="mensaje">Cargando solicitudes...</div>
 
   <div class="tabla-contenedor">
-
     <table>
-
       <thead>
-
         <tr>
           <th>ID</th>
-          <th>Nombre</th>
-          <th>Correo</th>
-          <th>Teléfono</th>
-          <th>Motivo</th>
+          <th>Usuario</th>
+          <th>Cuenta</th>
+          <th>IBAN</th>
+          <th>Frontal</th>
+          <th>Trasera</th>
+          <th>Domicilio</th>
+          <th>Finanzas</th>
           <th>Estado</th>
           <th>Fecha</th>
           <th>Acciones</th>
         </tr>
-
       </thead>
-
       <tbody id="tabla"></tbody>
-
     </table>
-
   </div>
 
 </div>
