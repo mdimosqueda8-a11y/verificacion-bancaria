@@ -1,8 +1,19 @@
-
-<!DOCTYPE html><html lang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Administrador - Verificación Digital</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><style>
+
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0"
+>
+
+<title>Administrador - Verificación Digital</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
 
 * {
   box-sizing: border-box;
@@ -11,23 +22,24 @@
 body {
   margin: 0;
   padding: 20px;
-  font-family: Arial, sans-serif;
-  background: #eef2f7;
-  color: #222;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #eef4fa;
+  color: #1f2937;
 }
 
 h1 {
   text-align: center;
-  color: #003366;
+  color: #0b3a68;
+  margin-bottom: 25px;
 }
 
 #contenedor {
-  max-width: 1200px;
-  margin: 20px auto;
+  max-width: 1250px;
+  margin: auto;
   background: white;
   padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 3px 15px rgba(0,0,0,.12);
+  border-radius: 14px;
+  box-shadow: 0 5px 25px rgba(15,45,75,.10);
 }
 
 #barra {
@@ -41,24 +53,27 @@ h1 {
   flex: 1;
   min-width: 220px;
   padding: 11px;
-  border: 1px solid #ccc;
+  border: 1px solid #cbd5e1;
   border-radius: 7px;
   font-size: 15px;
 }
 
 #actualizar {
+  width: auto;
+  margin: 0;
   padding: 11px 18px;
   border: none;
   border-radius: 7px;
-  background: #003366;
+  background: #0b3a68;
   color: white;
   cursor: pointer;
+  font-weight: bold;
 }
 
 #mensaje {
   padding: 12px;
   margin-bottom: 15px;
-  background: #f1f1f1;
+  background: #f1f5f9;
   border-radius: 7px;
 }
 
@@ -68,20 +83,28 @@ h1 {
 
 table {
   width: 100%;
-  min-width: 950px;
+  min-width: 1100px;
   border-collapse: collapse;
 }
 
 th,
 td {
-  border: 1px solid #ddd;
+  border: 1px solid #dbe3eb;
   padding: 10px;
   text-align: left;
 }
 
 th {
-  background: #003366;
+  background: #0b3a68;
   color: white;
+}
+
+select {
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-weight: bold;
+  background: white;
 }
 
 .btn-eliminar {
@@ -98,8 +121,28 @@ th {
   background: #a91f1f;
 }
 
-.estado {
-  font-weight: bold;
+.estado-pendiente {
+  border-color: #d6a800;
+  background: #fff9db;
+  color: #795700;
+}
+
+.estado-revision {
+  border-color: #1976b8;
+  background: #eaf5ff;
+  color: #14527d;
+}
+
+.estado-aprobado {
+  border-color: #2e8b57;
+  background: #e8f7ee;
+  color: #176b3a;
+}
+
+.estado-rechazado {
+  border-color: #c62828;
+  background: #fff0f0;
+  color: #a12622;
 }
 
 @media (max-width: 700px) {
@@ -114,39 +157,65 @@ th {
 
 }
 
-</style></head><body><h1>Administrador de Verificación Digital</h1><div id="contenedor">  <div id="barra"><input
-  type="search"
-  id="busqueda"
-  placeholder="Buscar por nombre, correo o teléfono..."
->
+</style>
 
-<button id="actualizar" type="button">
-  Actualizar
-</button>
+</head>
 
-  </div>  <div id="mensaje">
+<body>
+
+<h1>Administrador de Verificación Digital</h1>
+
+<div id="contenedor">
+
+  <div id="barra">
+
+    <input
+      type="search"
+      id="busqueda"
+      placeholder="Buscar por nombre, correo o teléfono..."
+    >
+
+    <button
+      id="actualizar"
+      type="button"
+    >
+      Actualizar
+    </button>
+
+  </div>
+
+  <div id="mensaje">
     Cargando solicitudes...
-  </div>  <div class="tabla-contenedor"><table>
+  </div>
 
-  <thead>
+  <div class="tabla-contenedor">
 
-    <tr>
-      <th>ID</th>
-      <th>Nombre</th>
-      <th>Correo</th>
-      <th>Teléfono</th>
-      <th>Motivo</th>
-      <th>Estado</th>
-      <th>Fecha</th>
-      <th>Acciones</th>
-    </tr>
+    <table>
 
-  </thead>
+      <thead>
 
-  <tbody id="tabla">
-  </tbody>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Motivo</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
 
-</table>
+      </thead>
 
-  </div></div><script src="admin.js"></script></body>
+      <tbody id="tabla"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+<script src="admin.js"></script>
+
+</body>
 </html>
