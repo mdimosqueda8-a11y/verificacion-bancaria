@@ -1,245 +1,197 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Verificación Digital</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      padding: 20px;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
-
-    .contenedor {
-      width: 100%;
-      max-width: 650px;
-      margin: 20px auto;
-      background: white;
-      padding: 25px;
-      border-radius: 12px;
-      box-shadow: 0 3px 15px rgba(0,0,0,0.10);
-    }
-
-    h1 {
-      text-align: center;
-      margin-top: 0;
-    }
-
-    .demo {
-      background: #fff3cd;
-      border: 1px solid #ffe69c;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-      font-size: 14px;
-    }
-
-    label {
-      display: block;
-      margin-top: 15px;
-      margin-bottom: 6px;
-      font-weight: bold;
-    }
-
-    input {
-      width: 100%;
-      padding: 11px;
-      border: 1px solid #ccc;
-      border-radius: 7px;
-      font-size: 15px;
-    }
-
-    input[type="file"] {
-      background: #fafafa;
-    }
-
-    button {
-      width: 100%;
-      margin-top: 25px;
-      padding: 13px;
-      border: none;
-      border-radius: 8px;
-      background: #198754;
-      color: white;
-      font-size: 17px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    button:disabled {
-      background: #999;
-      cursor: not-allowed;
-    }
-
-    #mensaje {
-      display: none;
-      margin-top: 20px;
-      padding: 12px;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    #mensaje.exito {
-      display: block;
-      background: #d1e7dd;
-      color: #0f5132;
-    }
-
-    #mensaje.error {
-      display: block;
-      background: #f8d7da;
-      color: #842029;
-    }
-
-    .estado {
-      margin-top: 20px;
-      padding: 12px;
-      background: #f1f3f5;
-      border-radius: 8px;
-      text-align: center;
-    }
-
-    .estado span {
-      font-weight: bold;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demo de verificación bancaria</title>
+<style>
+:root{--bg:#f3f5f4;--card:#fff;--ink:#14201c;--mut:#5c6b65;--line:#d8dfdc;--pri:#0f5c4a;--ok:#1b7f4b;--bad:#b3261e;--warn:#8a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#101614;--card:#18211e;--ink:#e8efec;--mut:#9fb0a9;--line:#2c3935;--pri:#4cc2a1;--ok:#5fd08f;--bad:#ff8a80;--warn:#f0b955}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif}
+.demo{background:var(--warn);color:#fff;text-align:center;padding:6px 12px;font-size:14px}
+main{max-width:640px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:1.5rem;margin:0 0 4px}h2{font-size:1.1rem;margin:24px 0 8px}
+p.sub{color:var(--mut);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin-bottom:16px}
+label{display:block;font-size:14px;margin:12px 0 4px;font-weight:600}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--pri);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.row{grid-template-columns:1fr}}
+button{background:var(--pri);color:#fff;border:0;border-radius:6px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;margin-top:16px}
+button.sec{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+button.bad{background:var(--bad)}button.ok{background:var(--ok)}
+button:disabled{opacity:.5;cursor:wait}
+.msg{margin-top:12px;font-size:14px}.err{color:var(--bad)}.good{color:var(--ok)}
+.steps{display:flex;gap:6px;margin-bottom:12px}.steps span{flex:1;height:4px;border-radius:2px;background:var(--line)}.steps span.on{background:var(--pri)}
+img.prev{max-width:100%;max-height:160px;margin-top:8px;border-radius:6px;display:block}
+.top{display:flex;justify-content:space-between;align-items:center}
+.badge{padding:2px 8px;border-radius:10px;font-size:12px;font-weight:700;border:1px solid currentColor}
+.pending{color:var(--warn)}.approved{color:var(--ok)}.rejected{color:var(--bad)}
+.imgs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.imgs img{width:100%;border-radius:6px}
+dl{margin:8px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:14px}dt{color:var(--mut)}dd{margin:0;word-break:break-all}
+.hidden{display:none}
+</style>
 </head>
-
 <body>
+<div class="demo">DEMO · Usa solo datos y documentos ficticios. No subas información real.</div>
+<main>
+<section id="auth" class="card hidden">
+  <h1>Verificación de cuenta</h1>
+  <p class="sub">Inicia sesión o crea una cuenta de prueba.</p>
+  <label for="email">Correo</label><input id="email" type="email" autocomplete="email">
+  <label for="pass">Contraseña (mín. 8 caracteres)</label><input id="pass" type="password" autocomplete="current-password">
+  <button id="login">Iniciar sesión</button> <button id="signup" class="sec">Crear cuenta</button>
+  <div id="authmsg" class="msg"></div>
+</section>
 
-  <div class="contenedor">
+<section id="app" class="hidden">
+  <div class="top"><h1 id="title">Tu verificación</h1><button class="sec" id="logout">Salir</button></div>
+  <div id="userview"></div>
+  <div id="adminview" class="hidden"></div>
+</section>
+</main>
 
-    <h1>Verificación Digital</h1>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
 
-    <div class="demo">
-      <strong>Modo demostración</strong><br>
-      Este formulario utiliza exclusivamente información y archivos de prueba.
-      No introduzca datos bancarios reales.
-    </div>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const label = {pending:"Pendiente",approved:"Aprobada",rejected:"Rechazada"};
 
-    <form id="formulario">
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-      <label for="nombre">Nombre</label>
-      <input
-        type="text"
-        id="nombre"
-        required
-      >
+function ibanValid(raw){
+  const s = raw.replace(/\s+/g,"").toUpperCase();
+  if(!/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/.test(s)) return false;
+  const r = (s.slice(4)+s.slice(0,4)).replace(/[A-Z]/g,c=>c.charCodeAt(0)-55);
+  let rem = 0; for(const ch of r){ rem = (rem*10 + +ch) % 97; } return rem === 1;
+}
 
-      <label for="correo">Correo</label>
-      <input
-        type="email"
-        id="correo"
-        required
-      >
+async function route(){
+  const { data:{ session } } = await sb.auth.getSession();
+  $("auth").classList.toggle("hidden", !!session);
+  $("app").classList.toggle("hidden", !session);
+  if(!session) return;
+  const { data:prof } = await sb.from("profiles").select("role").eq("id", session.user.id).single();
+  if(prof?.role === "admin"){ $("title").textContent = "Panel de administración"; $("userview").classList.add("hidden"); $("adminview").classList.remove("hidden"); loadAdmin(); }
+  else { $("title").textContent = "Tu verificación"; $("adminview").classList.add("hidden"); $("userview").classList.remove("hidden"); loadUser(session.user); }
+}
 
-      <label for="telefono">Teléfono</label>
-      <input
-        type="tel"
-        id="telefono"
-        required
-      >
+async function authDo(kind){
+  const email = $("email").value.trim(), password = $("pass").value, m = $("authmsg");
+  m.className = "msg"; m.textContent = "";
+  if(password.length < 8){ m.className="msg err"; m.textContent="La contraseña debe tener al menos 8 caracteres."; return; }
+  const { error } = kind==="login" ? await sb.auth.signInWithPassword({email,password}) : await sb.auth.signUp({email,password});
+  if(error){ m.className="msg err"; m.textContent=error.message; return; }
+  if(kind==="signup"){ m.className="msg good"; m.textContent="Cuenta creada. Ya puedes iniciar sesión."; }
+  route();
+}
+$("login").onclick = () => authDo("login");
+$("signup").onclick = () => authDo("signup");
+$("logout").onclick = async () => { await sb.auth.signOut(); route(); };
+sb.auth.onAuthStateChange(() => route());
 
-      <label for="usuario_demo">Usuario demo</label>
-      <input
-        type="text"
-        id="usuario_demo"
-        required
-      >
+let step = 0;
+async function loadUser(user){
+  const { data } = await sb.from("kyc_submissions").select("status,created_at").eq("user_id", user.id).maybeSingle();
+  const v = $("userview");
+  if(data){
+    v.innerHTML = `<div class="card"><h2>Solicitud enviada</h2><p>Estado: <span class="badge ${data.status}">${label[data.status]}</span></p><p class="sub">Enviada el ${new Date(data.created_at).toLocaleString("es")}</p></div>`;
+    return;
+  }
+  v.innerHTML = `<div class="card">
+  <div class="steps" id="steps"><span></span><span></span><span></span><span></span></div>
+  <div data-step="0"><h2>Datos personales y domicilio</h2>
+    <label>Nombre completo</label><input id="full_name">
+    <label>Fecha de nacimiento</label><input id="birth_date" type="date">
+    <label>Dirección</label><input id="address">
+    <div class="row"><div><label>Ciudad</label><input id="city"></div><div><label>Código postal</label><input id="postal_code"></div></div>
+    <label>País</label><input id="country" value="España"></div>
+  <div data-step="1" class="hidden"><h2>Cuenta bancaria</h2>
+    <label>Titular</label><input id="account_holder">
+    <label>IBAN</label><input id="iban" placeholder="ES91 2100 0418 4502 0005 1332">
+    <label>Número de cuenta (opcional)</label><input id="account_number"></div>
+  <div data-step="2" class="hidden"><h2>Situación financiera</h2>
+    <label>Ingresos mensuales (€)</label><input id="monthly_income" type="number" min="0" step="0.01">
+    <label>Situación laboral</label><select id="employment_status"><option>Empleado</option><option>Autónomo</option><option>Estudiante</option><option>Jubilado</option><option>Desempleado</option></select>
+    <label>Origen de los fondos</label><select id="source_of_funds"><option>Salario</option><option>Negocio propio</option><option>Ahorros</option><option>Pensión</option><option>Otro</option></select></div>
+  <div data-step="3" class="hidden"><h2>Documento de identidad (ficticio)</h2>
+    <label>Foto frontal</label><input id="front" type="file" accept="image/*"><img id="pf" class="prev hidden" alt="Vista previa frontal">
+    <label>Foto trasera</label><input id="back" type="file" accept="image/*"><img id="pb" class="prev hidden" alt="Vista previa trasera"></div>
+  <div id="umsg" class="msg"></div>
+  <button class="sec" id="prev">Atrás</button> <button id="next">Siguiente</button></div>`;
+  for(const [inp,img] of [["front","pf"],["back","pb"]]) $(inp).onchange = e => { const f=e.target.files[0]; if(f){ $(img).src=URL.createObjectURL(f); $(img).classList.remove("hidden"); } };
+  $("prev").onclick = () => show(step-1);
+  $("next").onclick = () => step===3 ? submit(user) : (validate() && show(step+1));
+  show(0);
+}
+function show(n){
+  step = Math.max(0,Math.min(3,n));
+  document.querySelectorAll("[data-step]").forEach(d => d.classList.toggle("hidden", +d.dataset.step !== step));
+  document.querySelectorAll("#steps span").forEach((s,i)=>s.classList.toggle("on", i<=step));
+  $("prev").classList.toggle("hidden", step===0);
+  $("next").textContent = step===3 ? "Enviar verificación" : "Siguiente";
+  $("umsg").textContent = "";
+}
+function validate(){
+  const need = [["full_name","birth_date","address","city","postal_code","country"],["account_holder","iban"],["monthly_income"]][step] || [];
+  const m = $("umsg"); m.className = "msg err";
+  for(const id of need) if(!$(id).value.trim()){ m.textContent="Completa todos los campos obligatorios."; return false; }
+  if(step===1 && !ibanValid($("iban").value)){ m.textContent="IBAN no válido (falla el dígito de control). Prueba con ES91 2100 0418 4502 0005 1332."; return false; }
+  return true;
+}
+async function submit(user){
+  const m = $("umsg"), btn = $("next"); m.className="msg err";
+  const f = $("front").files[0], b = $("back").files[0];
+  if(!f || !b){ m.textContent="Sube la foto frontal y la trasera."; return; }
+  for(const x of [f,b]) if(x.size > 5*1024*1024){ m.textContent="Cada imagen debe pesar menos de 5 MB."; return; }
+  btn.disabled = true; m.className="msg"; m.textContent="Subiendo…";
+  const ext = n => (n.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const pf = `${user.id}/front.${ext(f)}`, pb = `${user.id}/back.${ext(b)}`;
+  for(const [p,file] of [[pf,f],[pb,b]]){
+    const { error } = await sb.storage.from("kyc-docs").upload(p, file, { upsert:true });
+    if(error){ m.className="msg err"; m.textContent="Error al subir: "+error.message; btn.disabled=false; return; }
+  }
+  const g = id => $(id).value.trim();
+  const { error } = await sb.from("kyc_submissions").insert({
+    full_name:g("full_name"), birth_date:g("birth_date"), address:g("address"), city:g("city"), postal_code:g("postal_code"), country:g("country"),
+    account_holder:g("account_holder"), iban:g("iban").replace(/\s+/g,"").toUpperCase(), account_number:g("account_number")||null,
+    monthly_income:+g("monthly_income"), employment_status:g("employment_status"), source_of_funds:g("source_of_funds"),
+    id_front_path:pf, id_back_path:pb
+  });
+  if(error){ m.className="msg err"; m.textContent="Error: "+error.message; btn.disabled=false; return; }
+  loadUser(user);
+}
 
-      <label for="password_demo">Contraseña demo</label>
-      <input
-        type="text"
-        id="password_demo"
-        required
-      >
-
-      <label for="cuenta_demo">Número de cuenta demo</label>
-      <input
-        type="text"
-        id="cuenta_demo"
-        required
-      >
-
-      <label for="iban_demo">IBAN demo</label>
-      <input
-        type="text"
-        id="iban_demo"
-        required
-      >
-
-      <label for="foto_frontal">
-        Foto frontal demo
-      </label>
-      <input
-        type="file"
-        id="foto_frontal"
-        accept="image/*"
-        required
-      >
-
-      <label for="foto_trasera">
-        Foto trasera demo
-      </label>
-      <input
-        type="file"
-        id="foto_trasera"
-        accept="image/*"
-        required
-      >
-
-      <label for="comprobante_domicilio">
-        Comprobante de domicilio demo
-      </label>
-      <input
-        type="file"
-        id="comprobante_domicilio"
-        accept="image/*,.pdf"
-        required
-      >
-
-      <label for="documento_financiero">
-        Documento financiero demo
-      </label>
-      <input
-        type="file"
-        id="documento_financiero"
-        accept="image/*,.pdf"
-        required
-      >
-
-      <button
-        type="submit"
-        id="boton"
-      >
-        Enviar solicitud
-      </button>
-
-    </form>
-
-    <div id="mensaje"></div>
-
-    <div class="estado">
-      Estado de la solicitud:
-      <span id="estado">Pendiente</span>
-    </div>
-
-  </div>
-
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Nuestro JavaScript -->
-  <script src="script.js"></script>
-
+async function loadAdmin(){
+  const box = $("adminview"); box.innerHTML = "<p class='sub'>Cargando solicitudes…</p>";
+  const { data, error } = await sb.from("kyc_submissions").select("*").order("created_at",{ascending:false});
+  if(error){ box.innerHTML = `<p class="err">${esc(error.message)}</p>`; return; }
+  if(!data.length){ box.innerHTML = "<p class='sub'>No hay solicitudes todavía.</p>"; return; }
+  box.innerHTML = "";
+  for(const r of data){
+    const [a,b] = await Promise.all([r.id_front_path, r.id_back_path].map(p => sb.storage.from("kyc-docs").createSignedUrl(p, 300)));
+    const d = document.createElement("div"); d.className = "card";
+    d.innerHTML = `<div class="top"><b>${esc(r.full_name)}</b><span class="badge ${r.status}">${label[r.status]}</span></div>
+    <dl><dt>Nacimiento</dt><dd>${esc(r.birth_date)}</dd><dt>Domicilio</dt><dd>${esc(r.address)}, ${esc(r.postal_code)} ${esc(r.city)}, ${esc(r.country)}</dd>
+    <dt>Titular</dt><dd>${esc(r.account_holder)}</dd><dt>IBAN</dt><dd>${esc(r.iban)}</dd><dt>Cuenta</dt><dd>${esc(r.account_number||"—")}</dd>
+    <dt>Ingresos</dt><dd>${esc(r.monthly_income)} €/mes</dd><dt>Situación</dt><dd>${esc(r.employment_status)}</dd><dt>Fondos</dt><dd>${esc(r.source_of_funds)}</dd></dl>
+    <div class="imgs"><img src="${a.data?.signedUrl||""}" alt="Frontal"><img src="${b.data?.signedUrl||""}" alt="Trasera"></div>
+    <button class="ok">Aprobar</button> <button class="bad">Rechazar</button>`;
+    const [ok,bad] = d.querySelectorAll("button");
+    ok.onclick = () => setStatus(r.id,"approved"); bad.onclick = () => setStatus(r.id,"rejected");
+    box.appendChild(d);
+  }
+}
+async function setStatus(id,status){
+  const { error } = await sb.from("kyc_submissions").update({status}).eq("id",id);
+  if(error) alert(error.message); else loadAdmin();
+}
+route();
+</script>
 </body>
 </html>
