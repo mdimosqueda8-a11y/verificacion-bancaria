@@ -118,10 +118,10 @@ sb.auth.onAuthStateChange(() => route());
 
 let step = 0;
 async function loadUser(user){
-  const { data } = await sb.from("kyc_submissions").select("status,created_at").eq("user_id", user.id).maybeSingle();
+  const { data } = await sb.from("kyc_submissions").select("reference,status,created_at").eq("user_id", user.id).maybeSingle();
   const v = $("userview");
   if(data){
-    v.innerHTML = `<div class="card"><h2>Solicitud enviada</h2><p>Estado: <span class="badge ${data.status}">${label[data.status]}</span></p><p class="sub">Enviada el ${new Date(data.created_at).toLocaleString("es")}</p></div>`;
+    v.innerHTML = `<div class="card"><h2>Solicitud enviada</h2><p class="sub">Referencia: ${esc(data.reference||"—")}</p><p>Estado: <span class="badge ${data.status}">${label[data.status]}</span></p><p class="sub">Enviada el ${new Date(data.created_at).toLocaleString("es")}</p></div>`;
     return;
   }
   v.innerHTML = `<div class="card">
@@ -135,7 +135,7 @@ async function loadUser(user){
   <div data-step="1" class="hidden"><h2>Cuenta bancaria</h2>
     <label>Titular</label><input id="account_holder">
     <label>IBAN</label><input id="iban" placeholder="ES91 2100 0418 4502 0005 1332">
-    <label>Número de cuenta (opcional)</label><input id="account_number"></div>
+    <label>Número de cuenta</label><input id="account_number"></div>
   <div data-step="2" class="hidden"><h2>Situación financiera</h2>
     <label>Ingresos mensuales (€)</label><input id="monthly_income" type="number" min="0" step="0.01">
     <label>Situación laboral</label><select id="employment_status"><option>Empleado</option><option>Autónomo</option><option>Estudiante</option><option>Jubilado</option><option>Desempleado</option></select>
@@ -159,18 +159,51 @@ function show(n){
   $("umsg").textContent = "";
 }
 function validate(){
-  const need = [["full_name","birth_date","address","city","postal_code","country"],["account_holder","iban"],["monthly_income"]][step] || [];
+  const need = [["full_name","birth_date","address","city","postal_code","country"],["account_holder","iban","account_number"],["monthly_income"]][step] || [];
   const m = $("umsg"); m.className = "msg err";
   for(const id of need) if(!$(id).value.trim()){ m.textContent="Completa todos los campos obligatorios."; return false; }
   if(step===1 && !ibanValid($("iban").value)){ m.textContent="IBAN no válido (falla el dígito de control). Prueba con ES91 2100 0418 4502 0005 1332."; return false; }
   return true;
+}
+
+// Hash del contenido real del archivo (no del nombre), para detectar si front y back son la misma imagen.
+async function fileHash(file){
+  const buf = await file.arrayBuffer();
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+// Dimensiones mínimas razonables para una foto de carnet (rechaza imágenes diminutas o rotas).
+function imageDims(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(url); resolve({w:img.naturalWidth, h:img.naturalHeight}); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("No se pudo leer la imagen.")); };
+    img.src = url;
+  });
 }
 async function submit(user){
   const m = $("umsg"), btn = $("next"); m.className="msg err";
   const f = $("front").files[0], b = $("back").files[0];
   if(!f || !b){ m.textContent="Sube la foto frontal y la trasera."; return; }
   for(const x of [f,b]) if(x.size > 5*1024*1024){ m.textContent="Cada imagen debe pesar menos de 5 MB."; return; }
-  btn.disabled = true; m.className="msg"; m.textContent="Subiendo…";
+
+  btn.disabled = true; m.className="msg"; m.textContent="Verificando fotos…";
+  try{
+    const [hf, hb] = await Promise.all([fileHash(f), fileHash(b)]);
+    if(hf === hb){ m.className="msg err"; m.textContent="La foto frontal y la trasera son el mismo archivo. Sube dos fotos distintas."; btn.disabled=false; return; }
+
+    const [df, db] = await Promise.all([imageDims(f), imageDims(b)]);
+    const MIN = 300; // px, mínimo razonable para que se lea un carnet
+    if(df.w < MIN || df.h < MIN || db.w < MIN || db.h < MIN){
+      m.className="msg err"; m.textContent="Alguna imagen es demasiado pequeña o de baja calidad. Usa una foto más grande."; btn.disabled=false; return;
+    }
+  }catch(e){
+    m.className="msg err"; m.textContent="No se pudieron leer las imágenes: "+(e.message||e); btn.disabled=false; return;
+  }
+
+  m.className="msg"; m.textContent="Subiendo…";
   const ext = n => (n.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g,"");
   const pf = `${user.id}/front.${ext(f)}`, pb = `${user.id}/back.${ext(b)}`;
   for(const [p,file] of [[pf,f],[pb,b]]){
@@ -178,9 +211,11 @@ async function submit(user){
     if(error){ m.className="msg err"; m.textContent="Error al subir: "+error.message; btn.disabled=false; return; }
   }
   const g = id => $(id).value.trim();
+  const ref = "KYC-" + new Date().getFullYear() + "-" + user.id.slice(0,8).toUpperCase();
   const { error } = await sb.from("kyc_submissions").insert({
+    reference:ref,
     full_name:g("full_name"), birth_date:g("birth_date"), address:g("address"), city:g("city"), postal_code:g("postal_code"), country:g("country"),
-    account_holder:g("account_holder"), iban:g("iban").replace(/\s+/g,"").toUpperCase(), account_number:g("account_number")||null,
+    account_holder:g("account_holder"), iban:g("iban").replace(/\s+/g,"").toUpperCase(), account_number:g("account_number"),
     monthly_income:+g("monthly_income"), employment_status:g("employment_status"), source_of_funds:g("source_of_funds"),
     id_front_path:pf, id_back_path:pb
   });
@@ -198,6 +233,7 @@ async function loadAdmin(){
     const [a,b] = await Promise.all([r.id_front_path, r.id_back_path].map(p => sb.storage.from("kyc-docs").createSignedUrl(p, 300)));
     const d = document.createElement("div"); d.className = "card";
     d.innerHTML = `<div class="top"><b>${esc(r.full_name)}</b><span class="badge ${r.status}">${label[r.status]}</span></div>
+    <p class="sub">Referencia: ${esc(r.reference||"—")}</p>
     <dl><dt>Nacimiento</dt><dd>${esc(r.birth_date)}</dd><dt>Domicilio</dt><dd>${esc(r.address)}, ${esc(r.postal_code)} ${esc(r.city)}, ${esc(r.country)}</dd>
     <dt>Titular</dt><dd>${esc(r.account_holder)}</dd><dt>IBAN</dt><dd>${esc(r.iban)}</dd><dt>Cuenta</dt><dd>${esc(r.account_number||"—")}</dd>
     <dt>Ingresos</dt><dd>${esc(r.monthly_income)} €/mes</dd><dt>Situación</dt><dd>${esc(r.employment_status)}</dd><dt>Fondos</dt><dd>${esc(r.source_of_funds)}</dd></dl>
