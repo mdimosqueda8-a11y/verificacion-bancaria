@@ -37,6 +37,7 @@ dl{margin:8px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-si
 <body>
 <div class="demo">DEMO · Usa solo datos y documentos ficticios. No subas información real.</div>
 <main>
+<div id="loaderr" class="card hidden err"></div>
 <section id="auth" class="card hidden">
   <h1>Verificación de cuenta</h1>
   <p class="sub">Inicia sesión o crea una cuenta de prueba.</p>
@@ -53,10 +54,23 @@ dl{margin:8px 0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-si
 </section>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';"></script>
 <script>
+window.addEventListener("error", e => {
+  const box = document.getElementById("loaderr");
+  box.classList.remove("hidden");
+  box.textContent = "No se pudo cargar la página correctamente (" + (e.message || "error desconocido") + "). Revisa tu conexión y recarga.";
+});
+
 const SUPABASE_URL = "https://iomxopcdoygphvulaswb.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
+
+if (typeof supabase === "undefined") {
+  const box = document.getElementById("loaderr");
+  box.classList.remove("hidden");
+  box.textContent = "No se pudo cargar la librería de Supabase (el script externo no llegó a descargarse). Prueba a recargar la página, o cambia de red (datos móviles / wifi / VPN) e inténtalo de nuevo.";
+  throw new Error("supabase-js no cargó");
+}
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -72,13 +86,20 @@ function ibanValid(raw){
 }
 
 async function route(){
-  const { data:{ session } } = await sb.auth.getSession();
-  $("auth").classList.toggle("hidden", !!session);
-  $("app").classList.toggle("hidden", !session);
-  if(!session) return;
-  const { data:prof } = await sb.from("profiles").select("role").eq("id", session.user.id).single();
-  if(prof?.role === "admin"){ $("title").textContent = "Panel de administración"; $("userview").classList.add("hidden"); $("adminview").classList.remove("hidden"); loadAdmin(); }
-  else { $("title").textContent = "Tu verificación"; $("adminview").classList.add("hidden"); $("userview").classList.remove("hidden"); loadUser(session.user); }
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    $("auth").classList.toggle("hidden", !!session);
+    $("app").classList.toggle("hidden", !session);
+    if(!session) return;
+    const { data:prof, error } = await sb.from("profiles").select("role").eq("id", session.user.id).maybeSingle();
+    if(error) throw error;
+    if(prof?.role === "admin"){ $("title").textContent = "Panel de administración"; $("userview").classList.add("hidden"); $("adminview").classList.remove("hidden"); loadAdmin(); }
+    else { $("title").textContent = "Tu verificación"; $("adminview").classList.add("hidden"); $("userview").classList.remove("hidden"); loadUser(session.user); }
+  } catch(e){
+    const box = $("loaderr");
+    box.classList.remove("hidden");
+    box.textContent = "Error al cargar tu cuenta: " + (e.message || e);
+  }
 }
 
 async function authDo(kind){
