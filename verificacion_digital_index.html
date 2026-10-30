@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificación Digital</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+.encabezado{background:#0f2a44;color:#fff;padding:28px 20px;text-align:center}
+.encabezado h1{margin:0 0 8px;font-size:28px}
+.encabezado p{margin:0;color:#dbeafe;font-size:15px}
+.contenedor{width:100%;max-width:700px;margin:30px auto;padding:0 16px}
+.tarjeta{background:#fff;border-radius:14px;padding:25px;box-shadow:0 5px 20px rgba(15,42,68,.10)}
+.titulo-seccion{color:#0f2a44;font-size:18px;margin:0 0 18px;padding-bottom:10px;border-bottom:1px solid #e2e8f0}
+.campo{margin-bottom:17px}
+label{display:block;margin-bottom:7px;font-weight:bold;font-size:14px;color:#334155}
+input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px;background:#fff}
+input:focus{outline:none;border-color:#2563eb}
+.nota-demo{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;padding:12px;border-radius:8px;margin-bottom:22px;font-size:13px;line-height:1.5}
+.archivo{padding:10px;background:#f8fafc}
+.boton{width:100%;border:0;border-radius:8px;padding:14px;background:#0f2a44;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px}
+.boton:hover{background:#163d61}
+.boton:disabled{opacity:.6;cursor:not-allowed}
+#mensaje{display:none;margin-top:18px;padding:13px;border-radius:8px;text-align:center;font-size:14px}
+#mensaje.exito{display:block;background:#dcfce7;color:#166534;border:1px solid #86efac}
+#mensaje.error{display:block;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+.estado-box{margin-top:25px;padding:16px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0}
+.estado{display:inline-block;margin-top:8px;padding:7px 12px;border-radius:20px;background:#fef3c7;color:#92400e;font-weight:bold;font-size:13px}
+.pie{text-align:center;padding:25px;color:#64748b;font-size:12px}
+@media(max-width:600px){.tarjeta{padding:18px}.encabezado h1{font-size:24px}}
+</style>
+</head>
+<body>
+<header class="encabezado">
+<h1>Verificación Digital</h1>
+<p>Complete la información para solicitar su verificación.</p>
+</header>
+<main class="contenedor">
+<div class="tarjeta">
+<div class="nota-demo"><strong>Modo demostración</strong><br>Este formulario utiliza exclusivamente información y archivos de prueba. No introduzca datos bancarios reales.</div>
+<form id="formulario">
+<h2 class="titulo-seccion">Información personal</h2>
+<div class="campo"><label for="nombre">Nombre</label><input type="text" id="nombre" required autocomplete="off" placeholder="Nombre de demostración"></div>
+<div class="campo"><label for="correo">Correo electrónico</label><input type="email" id="correo" required autocomplete="off" placeholder="correo@demo.com"></div>
+<div class="campo"><label for="telefono">Teléfono</label><input type="tel" id="telefono" required autocomplete="off" placeholder="000-000-0000"></div>
+<h2 class="titulo-seccion">Datos de demostración</h2>
+<div class="campo"><label for="usuario_demo">Usuario demo</label><input type="text" id="usuario_demo" required autocomplete="off" placeholder="usuario_demo"></div>
+<div class="campo"><label for="password_demo">Contraseña demo</label><input type="password" id="password_demo" required autocomplete="off" placeholder="contraseña_demo"></div>
+<div class="campo"><label for="cuenta_demo">Número de cuenta demo</label><input type="text" id="cuenta_demo" required autocomplete="off" placeholder="000000000000"></div>
+<div class="campo"><label for="iban_demo">IBAN demo</label><input type="text" id="iban_demo" required autocomplete="off" placeholder="XX00-DEMO-000000"></div>
+<h2 class="titulo-seccion">Archivos de demostración</h2>
+<div class="campo"><label for="foto_frontal">Foto frontal demo</label><input class="archivo" type="file" id="foto_frontal" accept="image/jpeg,image/png,image/webp" required></div>
+<div class="campo"><label for="foto_trasera">Foto trasera demo</label><input class="archivo" type="file" id="foto_trasera" accept="image/jpeg,image/png,image/webp" required></div>
+<div class="campo"><label for="comprobante_domicilio">Comprobante de domicilio demo</label><input class="archivo" type="file" id="comprobante_domicilio" accept="image/jpeg,image/png,application/pdf" required></div>
+<div class="campo"><label for="documento_financiero">Documento financiero demo</label><input class="archivo" type="file" id="documento_financiero" accept="image/jpeg,image/png,application/pdf" required></div>
+<button type="submit" class="boton" id="boton">Enviar solicitud</button>
+<div id="mensaje"></div>
+<div class="estado-box"><strong>Estado de la solicitud</strong><br><span id="estado" class="estado">Pendiente</span></div>
+</form>
+</div>
+</main>
+<footer class="pie">Demostración de Verificación Digital</footer>
+<script src="script.js"></script>
+</body>
+</html>
