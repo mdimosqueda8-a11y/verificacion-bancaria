@@ -1,234 +1,182 @@
 const SUPABASE_URL =
-"https://iomxopcdoygphvulaswb.supabase.co";
+  "https://iomxopcdoygphvulaswb.supabase.co";
 
 const SUPABASE_PUBLISHABLE_KEY =
-"sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
+  "sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
 
 const supabaseClient =
-window.supabase.createClient(
-SUPABASE_URL,
-SUPABASE_PUBLISHABLE_KEY
-);
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
 
 const formulario =
-document.getElementById("formulario");
+  document.getElementById("formulario");
 
 const boton =
-document.getElementById("boton");
+  document.getElementById("boton");
 
 const mensaje =
-document.getElementById("mensaje");
+  document.getElementById("mensaje");
+
 
 function mostrarMensaje(texto, tipo) {
 
-mensaje.textContent = texto;
-mensaje.className = tipo;
-mensaje.style.display = "block";
+  mensaje.textContent = texto;
+  mensaje.className = tipo;
+  mensaje.style.display = "block";
 
 }
+
 
 formulario.addEventListener(
-"submit",
-async function(evento) {
+  "submit",
+  async function(evento) {
 
-evento.preventDefault();
+    evento.preventDefault();
 
-/*
-  Primero comprobamos que todos
-  los campos obligatorios estén completos.
-*/
+    if (!formulario.checkValidity()) {
 
-if (!formulario.checkValidity()) {
+      formulario.reportValidity();
 
-  formulario.reportValidity();
+      mostrarMensaje(
+        "Por favor, completa todos los campos correctamente.",
+        "error"
+      );
 
-  mostrarMensaje(
-    "Por favor, completa todos los campos correctamente antes de enviar la solicitud.",
-    "error"
-  );
+      return;
+    }
 
-  return;
-}
+    const nombre =
+      document.getElementById("nombre")
+        .value
+        .trim();
 
+    const correo =
+      document.getElementById("correo")
+        .value
+        .trim();
 
-/*
-  Obtener los valores directamente
-  de cada campo.
-*/
+    const telefono =
+      document.getElementById("telefono")
+        .value
+        .trim();
 
-const nombre =
-  document.getElementById("nombre")
-    .value
-    .trim();
-
-const correo =
-  document.getElementById("correo")
-    .value
-    .trim();
-
-const telefono =
-  document.getElementById("telefono")
-    .value
-    .trim();
-
-const motivo =
-  document.getElementById("motivo")
-    .value
-    .trim();
+    const motivo =
+      document.getElementById("motivo")
+        .value
+        .trim();
 
 
-/*
-  Comprobación adicional.
-*/
+    if (!nombre || !correo || !telefono || !motivo) {
 
-if (
-  !nombre ||
-  !correo ||
-  !telefono ||
-  !motivo
-) {
+      mostrarMensaje(
+        "Por favor, completa todos los campos antes de enviar la solicitud.",
+        "error"
+      );
 
-  mostrarMensaje(
-    "Por favor, completa todos los campos antes de enviar la solicitud.",
-    "error"
-  );
-
-  return;
-}
+      return;
+    }
 
 
-/*
-  Comprobar formato del correo.
-*/
+    const correoValido =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        .test(correo);
 
-const correoValido =
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    .test(correo);
+    if (!correoValido) {
 
-if (!correoValido) {
+      mostrarMensaje(
+        "Por favor, introduce un correo electrónico válido.",
+        "error"
+      );
 
-  mostrarMensaje(
-    "Por favor, introduce un correo electrónico válido.",
-    "error"
-  );
-
-  return;
-}
+      return;
+    }
 
 
-boton.disabled = true;
-boton.textContent = "Enviando...";
+    boton.disabled = true;
+    boton.textContent = "Enviando...";
 
-mensaje.style.display = "none";
-
-
-/*
-  Registro que será enviado
-  a Supabase.
-*/
-
-const registro = {
-
-  nombre: nombre,
-
-  correo: correo,
-
-  telefono: telefono,
-
-  motivo: motivo,
-
-  estado: "Pendiente"
-
-};
+    mensaje.style.display = "none";
 
 
-console.log(
-  "Registro que se enviará:",
-  registro
-);
+    const registro = {
+
+      nombre: nombre,
+
+      correo: correo,
+
+      telefono: telefono,
+
+      motivo: motivo,
+
+      estado: "Pendiente"
+
+    };
 
 
-try {
+    try {
 
-  const { data, error } =
-    await supabaseClient
-
-      .from("usuario_verificaciones")
-
-      .insert(registro)
-
-      .select()
-
-      .single();
+      const { data, error } =
+        await supabaseClient
+          .from("usuario_verificaciones")
+          .insert(registro)
+          .select()
+          .single();
 
 
-  /*
-    Si Supabase devuelve un error,
-    NO borramos el formulario.
-  */
+      if (error) {
 
-  if (error) {
+        console.error(
+          "Error de Supabase:",
+          error
+        );
 
-    console.error(
-      "Error de Supabase:",
-      error
-    );
+        mostrarMensaje(
+          "No se pudo enviar la solicitud. Por favor, inténtalo nuevamente.",
+          "error"
+        );
 
-    mostrarMensaje(
-      "No se pudo enviar la solicitud. Por favor, inténtalo nuevamente.",
-      "error"
-    );
+        return;
+      }
 
-    return;
+
+      console.log(
+        "Solicitud guardada:",
+        data
+      );
+
+
+      mostrarMensaje(
+        "Solicitud enviada correctamente. Será revisada y procesada en un plazo máximo de 72 horas.",
+        "exito"
+      );
+
+
+      formulario.reset();
+
+
+    } catch (error) {
+
+      console.error(
+        "Error inesperado:",
+        error
+      );
+
+      mostrarMensaje(
+        "Ocurrió un problema de conexión. Por favor, inténtalo nuevamente.",
+        "error"
+      );
+
+
+    } finally {
+
+      boton.disabled = false;
+
+      boton.textContent =
+        "Enviar solicitud";
+
+    }
+
   }
-
-
-  console.log(
-    "Solicitud guardada:",
-    data
-  );
-
-
-  /*
-    Éxito.
-  */
-
-  mostrarMensaje(
-    "Solicitud enviada correctamente. Será revisada y procesada en un plazo máximo de 72 horas.",
-    "exito"
-  );
-
-
-  /*
-    Solo después de confirmar que
-    Supabase guardó la solicitud,
-    limpiamos el formulario.
-  */
-
-  formulario.reset();
-
-
-} catch (error) {
-
-  console.error(
-    "Error inesperado:",
-    error
-  );
-
-  mostrarMensaje(
-    "Ocurrió un problema de conexión. Por favor, inténtalo nuevamente.",
-    "error"
-  );
-
-
-} finally {
-
-  boton.disabled = false;
-
-  boton.textContent =
-    "Enviar solicitud";
-
-}
-
-}
 );
