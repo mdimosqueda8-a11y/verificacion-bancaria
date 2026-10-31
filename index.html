@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Verificación Digital Bancaria</title>
+<style>
+:root{
+  --navy-900:#0a1f3d;
+  --navy-800:#0f2a4f;
+  --navy-700:#13315c;
+  --navy-600:#1d4273;
+  --bg:#f3f5f8;
+  --card:#ffffff;
+  --ink:#1b2430;
+  --muted:#5b6b7d;
+  --border:#dde3ec;
+  --ok:#1f7a4d;
+  --ok-bg:#e8f5ee;
+  --bad:#a8291f;
+  --bad-bg:#fdeeec;
+  --gold:#b08a3e;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+h1,h2,h3{margin-top:0;font-family:Georgia,Cambria,"Times New Roman",serif;color:var(--navy-900);font-weight:600}
+header{background:var(--navy-900);padding:16px 20px}
+.logo{display:flex;align-items:center;gap:10px;color:#fff;font-family:Georgia,Cambria,"Times New Roman",serif;font-weight:600;font-size:19px;max-width:900px;margin:0 auto}
+.logo svg{flex:none}
+main{max-width:900px;margin:30px auto;padding:0 16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:18px;box-shadow:0 1px 3px #0a1f3d0d}
+.sub{color:var(--muted)}
+label{display:block;font-weight:600;margin:14px 0 6px;color:var(--ink)}
+input,select{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:15px;font-family:inherit;color:var(--ink);background:#fff}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--navy-600);outline-offset:1px}
+button{border:0;border-radius:8px;padding:12px 18px;font-weight:600;font-size:15px;cursor:pointer;font-family:inherit}
+.primary{background:var(--navy-700);color:#fff}
+.primary:hover{background:var(--navy-600)}
+.primary:disabled{opacity:.6;cursor:wait}
+button:not(.primary):not(.ok):not(.bad){background:#fff;color:var(--navy-700);border:1px solid var(--border)}
+.ok{background:var(--ok);color:#fff}
+.bad{background:var(--bad);color:#fff}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.err{color:var(--bad);background:var(--bad-bg);padding:12px 14px;border-radius:8px;border:1px solid #f1c9c3}
+.success{color:var(--ok);background:var(--ok-bg);padding:12px 14px;border-radius:8px;border:1px solid #c7e6d5}
+.info{background:#eef2f8;color:var(--navy-800);padding:14px;border-radius:8px;margin-top:15px;border:1px solid var(--border)}
+.steps{display:flex;gap:6px;margin-bottom:20px}
+.step{flex:1;height:5px;background:var(--border);border-radius:99px}
+.step.active{background:var(--navy-700)}
+.stepbox{display:none}
+.stepbox.active{display:block}
+.preview{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.preview img{width:150px;height:100px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
+.top{display:flex;justify-content:space-between;gap:15px;align-items:center}
+.badge{padding:6px 10px;border-radius:99px;font-size:12px;font-weight:700;background:#fdf3e0;color:#8a5a00}
+.badge.approved{background:var(--ok-bg);color:var(--ok)}
+.badge.rejected{background:var(--bad-bg);color:var(--bad)}
+dl{display:grid;grid-template-columns:180px 1fr;gap:8px 15px}
+dt{font-weight:700;color:var(--muted)}
+dd{margin:0;word-break:break-word}
+.imgs{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.imgs img{width:220px;max-height:220px;object-fit:contain;border:1px solid var(--border);border-radius:8px;background:#f8fafc}
+.modal{position:fixed;inset:0;background:#0a1f3dcc;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.show{display:flex}
+.modal .card{max-width:600px;width:100%;max-height:90vh;overflow:auto}
+.steps-note{font-size:13px;color:var(--muted);margin-top:5px}
+.hidden{display:none!important}
+.btn-icon{display:inline-flex;align-items:center;gap:8px}
+footer{max-width:900px;margin:40px auto 0;padding:24px 16px 40px;color:var(--muted);font-size:13px;border-top:1px solid var(--border)}
+footer .foot-links{display:flex;gap:16px;flex-wrap:wrap;margin-top:8px}
+footer a{color:var(--navy-700);text-decoration:none}
+footer a:hover{text-decoration:underline}
+.trust-note{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:14px}
+@media(max-width:600px){dl{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+<path d="M12 2L4 5.5V11C4 16.2 7.4 20.9 12 22C16.6 20.9 20 16.2 20 11V5.5L12 2Z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/>
+<path d="M9 12L11 14L15.5 9.2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+Verificación Digital Bancaria
+</div>
+</header>
+
+<main>
+
+<section id="auth">
+<div class="card">
+<h1>Acceso seguro</h1>
+<p class="sub">Inicia sesión o crea una cuenta para continuar con tu proceso de verificación.</p>
+
+<div id="authmsg"></div>
+
+<label>Correo electrónico</label>
+<input id="email" type="email" autocomplete="email">
+
+<label>Contraseña</label>
+<input id="password" type="password" autocomplete="current-password">
+
+<div class="actions">
+<button class="primary" id="login">Iniciar sesión</button>
+<button id="signup">Crear cuenta</button>
+</div>
+
+<div class="trust-note">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+<rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/>
+<path d="M8 11V7.5C8 5.01 10.01 3 12.5 3C14.6 3 16.38 4.46 16.87 6.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+</svg>
+Tu información se transmite de forma cifrada y solo es visible para personal autorizado.
+</div>
+</div>
+</section>
+
+<section id="app" class="hidden">
+
+<div class="card">
+<div class="top">
+<div>
+<h1>Verificación de identidad</h1>
+<p class="sub">Completa los datos solicitados para enviar tu solicitud.</p>
+</div>
+<button id="logout">Cerrar sesión</button>
+</div>
+</div>
+
+<div id="clientview"></div>
+<div id="adminview"></div>
+
+</section>
+</main>
+
+<footer>
+<div><strong>Verificación Digital Bancaria</strong></div>
+<p>Este servicio gestiona solicitudes de verificación de identidad y cuentas bancarias. La información enviada se utiliza exclusivamente para ese fin y se trata conforme a la política de privacidad de la entidad.</p>
+<div class="foot-links">
+<a href="#" onclick="document.getElementById('privacy').classList.add('show');return false;">Privacidad y seguridad</a>
+<a href="#" onclick="document.getElementById('privacy').classList.add('show');return false;">Términos de uso</a>
+</div>
+</footer>
+
+<div class="modal" id="privacy">
+<div class="card">
+<h2>Privacidad y seguridad</h2>
+<p>La información que nos proporcionas se utiliza exclusivamente para gestionar tu solicitud de verificación de identidad y de cuenta bancaria. Tus datos se almacenan de forma segura y solo son accesibles para personal autorizado.</p>
+<p>No compartas tus credenciales de acceso con otras personas. Nuestro equipo nunca te pedirá tu contraseña por teléfono, correo electrónico o mensaje.</p>
+<button class="primary" id="closePrivacy">Entendido</button>
+</div>
+</div>
+
+<script>
+window.addEventListener("error", function(e){
+var box = document.getElementById("authmsg");
+if(box) box.innerHTML = '<div class="err">Error en la página: ' + (e.message || "desconocido") + '. Recarga la página.</div>';
+});
+
+const SUPABASE_URL =
+"https://iomxopcdoygphvulaswb.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_4KqCEnqLVSEETOob_X9c7w_4IOpToI-";
+
+let sb = null;
+
+const $ = id =>
+document.getElementById(id);
+
+function esc(v){
+return String(v ?? "")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+}
+
+// Longitud oficial del IBAN por país (registro oficial IBAN) y nombre en español, para el desplegable.
+const IBAN_COUNTRIES = [
+["AD","Andorra",24],["AE","Emiratos Árabes Unidos",23],["AL","Albania",28],["AT","Austria",20],
+["AZ","Azerbaiyán",28],["BA","Bosnia y Herzegovina",20],["BE","Bélgica",16],["BG","Bulgaria",22],
+["BH","Baréin",22],["BR","Brasil",29],["BY","Bielorrusia",28],["CH","Suiza",21],["CR","Costa Rica",22],
+["CY","Chipre",28],["CZ","Chequia",24],["DE","Alemania",22],["DK","Dinamarca",18],["DO","República Dominicana",28],
+["EE","Estonia",20],["EG","Egipto",29],["ES","España",24],["FI","Finlandia",18],["FO","Islas Feroe",18],
+["FR","Francia",27],["GB","Reino Unido",22],["GE","Georgia",22],["GI","Gibraltar",23],["GL","Groenlandia",18],
+["GR","Grecia",27],["GT","Guatemala",28],["HR","Croacia",21],["HU","Hungría",28],["IE","Irlanda",22],
+["IL","Israel",23],["IQ","Irak",23],["IS","Islandia",26],["IT","Italia",27],["JO","Jordania",30],
+["KW","Kuwait",30],["KZ","Kazajistán",20],["LB","Líbano",28],["LC","Santa Lucía",32],["LI","Liechtenstein",21],
+["LT","Lituania",20],["LU","Luxemburgo",20],["LV","Letonia",21],["LY","Libia",25],["MC","Mónaco",27],
+["MD","Moldavia",24],["ME","Montenegro",22],["MK","Macedonia del Norte",19],["MR","Mauritania",27],
+["MT","Malta",31],["MU","Mauricio",30],["NL","Países Bajos",18],["NO","Noruega",15],["PK","Pakistán",24],
+["PL","Polonia",28],["PS","Palestina",29],["PT","Portugal",25],["QA","Catar",29],["RO","Rumanía",24],
+["RS","Serbia",22],["SA","Arabia Saudita",24],["SC","Seychelles",31],["SE","Suecia",24],["SI","Eslovenia",19],
+["SK","Eslovaquia",24],["SM","San Marino",27],["ST","Santo Tomé y Príncipe",25],["SV","El Salvador",28],
+["TL","Timor Oriental",23],["TN","Túnez",24],["TR","Turquía",26],["UA","Ucrania",29],["VA","Ciudad del Vaticano",22],
+["VG","Islas Vírgenes Británicas",24],["XK","Kosovo",20]
+];
+
+function ibanValid(v, countryCode){
+const x =
+String(v || "")
+.replace(/\s/g,"")
+.toUpperCase();
+
+if(!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,34}$/.test(x)) return false;
+
+// El IBAN debe empezar con el código del país seleccionado en el formulario.
+if(countryCode && !x.startsWith(countryCode)) return false;
+
+// Y debe tener exactamente la longitud oficial que le corresponde a ese país.
+const spec = IBAN_COUNTRIES.find(c => c[0]===countryCode);
+if(spec && x.length !== spec[2]) return false;
+
+// Validación del dígito de control real (algoritmo módulo 97 del estándar IBAN)
+const rearranged = x.slice(4) + x.slice(0,4);
+const numeric = rearranged.replace(/[A-Z]/g, c => (c.charCodeAt(0)-55));
+let remainder = 0;
+for(const ch of numeric){ remainder = (remainder*10 + Number(ch)) % 97; }
+return remainder === 1;
+}
+
+function showError(msg){
+$("authmsg").innerHTML =
+`<div class="err">${esc(msg)}</div>`;
+}
+
+function showAuthMessage(msg, ok=false){
+$("authmsg").innerHTML =
+`<div class="${ok ? "success" : "err"}">${esc(msg)}</div>`;
+}
+
+async function route(){
+if(!sb){
+showAuthMessage("No se pudo cargar la conexión segura. Comprueba tu conexión a Internet y vuelve a cargar la página.");
+return;
+}
+
+try{
+const {data,error} =
+await sb.auth.getUser();
+
+if(error && error.message){
+showAuthMessage(error.message);
+return;
+}
+
+if(data.user){
+await loadUser(data.user);
+}else{
+$("auth").classList.remove("hidden");
+$("app").classList.add("hidden");
+}
+}catch(error){
+showAuthMessage("No se pudo comprobar la sesión: "+(error.message || error));
+}
+}
+
+async function authDo(type){
+if(!sb){
+showAuthMessage("La conexión con Supabase todavía no está disponible. Recarga la página.");
+return;
+}
+
+const email =
+$("email").value.trim();
+
+const password =
+$("password").value;
+
+if(!email || !password){
+showAuthMessage("Completa el correo y la contraseña.");
+return;
+}
+
+if(password.length < 6){
+showAuthMessage("La contraseña debe tener al menos 6 caracteres.");
+return;
+}
+
+const button =
+type==="login" ? $("login") : $("signup");
+
+button.disabled=true;
+button.textContent =
+type==="login" ? "Iniciando..." : "Creando...";
+
+try{
+
+let result;
+
+if(type==="login"){
+result =
+await sb.auth.signInWithPassword({
+email,password
+});
+}else{
+result =
+await sb.auth.signUp({
+email,password
+});
+}
+
+if(result.error){
+showAuthMessage(result.error.message);
+return;
+}
+
+if(type==="signup"){
+
+if(result.data?.session){
+showAuthMessage(
+"Cuenta creada correctamente. Entrando...",
+true
+);
+setTimeout(()=>route(),300);
+}else{
+showAuthMessage(
+"Cuenta creada correctamente. Revisa tu correo para confirmar la cuenta y después inicia sesión.",
+true
+);
+}
+
+}else{
+showAuthMessage(
+"Inicio de sesión correcto. Cargando...",
+true
+);
+setTimeout(()=>route(),300);
+}
+
+}catch(error){
+showAuthMessage(
+"No se pudo completar la operación: "+
+(error.message || error)
+);
+}finally{
+button.disabled=false;
+button.textContent =
+type==="login"
+?
+"Iniciar sesión"
+:
+"Crear cuenta";
+}
+}
+
+function bindAuthButtons(){
+
+$("login").onclick =
+function(){
+authDo("login");
+};
+
+$("signup").onclick =
+function(){
+authDo("signup");
+};
+
+$("logout").onclick =
+async function(){
+if(!sb) return;
+await sb.auth.signOut();
+route();
+};
+
+$("closePrivacy").onclick =
+function(){
+$("privacy").classList.remove("show");
+};
+
+}
+
+async function loadSupabase(){
+
+if(window.supabase?.createClient){
+
+sb =
+window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
+
+return true;
+}
+
+const urls=[
+"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js",
+"https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"
+];
+
+for(const url of urls){
+
+try{
+
+await new Promise((resolve,reject)=>{
+
+const script =
+document.createElement("script");
+
+script.src=url;
+script.onload=resolve;
+script.onerror=reject;
+
+document.head.appendChild(script);
+
+});
+
+if(window.supabase?.createClient){
+
+sb =
+window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
+
+return true;
+}
+
+}catch(e){}
+
+}
+
+return false;
+}
+
+async function startApp(){
+
+bindAuthButtons();
+
+const loaded =
+await loadSupabase();
+
+if(!loaded){
+showAuthMessage(
+"No se pudo cargar el módulo de conexión de Supabase. En este teléfono el navegador puede estar bloqueando el servicio. Prueba recargando la página con Internet activo."
+);
+return;
+}
+
+try{
+
+sb.auth.onAuthStateChange(
+()=>{
+setTimeout(route,0);
+}
+);
+
+await route();
+
+}catch(error){
+
+showAuthMessage(
+"Error al iniciar la aplicación: "+
+(error.message || error)
+);
+
+}
+
+}
+
+async function loadUser(user){
+
+const {data:profile} =
+await sb
+.from("profiles")
+.select("role")
+.eq("id",user.id)
+.maybeSingle();
+
+$("auth").classList.add("hidden");
+$("app").classList.remove("hidden");
+
+if(profile?.role==="admin"){
+$("clientview").innerHTML="";
+await loadAdmin();
+return;
+}
+
+$("adminview").innerHTML="";
+
+// Si ya existe una solicitud para este usuario, se muestra su estado en vez de un formulario nuevo.
+const {data:existing} =
+await sb
+.from("kyc_submissions")
+.select("reference,status,created_at")
+.eq("user_id",user.id)
+.maybeSingle();
+
+if(existing){
+const statusLabel =
+existing.status === "approved" ? "Aprobada" :
+existing.status === "rejected" ? "Rechazada" :
+"En revisión";
+
+$("clientview").innerHTML = `
+<div class="card">
+<h2>Tu solicitud ya fue enviada</h2>
+<p class="sub">Referencia: <strong>${esc(existing.reference||"—")}</strong></p>
+<p>Estado: <span class="badge ${esc(existing.status||"pending")}">${statusLabel}</span></p>
+<p class="sub">Enviada el ${existing.created_at ? new Date(existing.created_at).toLocaleString("es") : "—"}</p>
+<div class="info">Tu información está siendo revisada por nuestro equipo. El plazo máximo de revisión establecido es de 72 horas.</div>
+</div>
+`;
+return;
+}
+
+$("clientview").innerHTML = `
+
+<div class="card">
+
+<div class="steps">
+<div class="step active"></div>
+<div class="step"></div>
+<div class="step"></div>
+<div class="step"></div>
+<div class="step"></div>
+</div>
+
+<div id="formmsg"></div>
+
+<div class="stepbox active" data-step="0">
+<h2>1. Datos personales</h2>
+
+<label>Nombre completo</label>
+<input id="full_name">
+
+<label>Fecha de nacimiento</label>
+<input id="birth_date" type="date">
+
+<label>Dirección</label>
+<input id="address">
+
+<label>Ciudad</label>
+<input id="city">
+
+<label>Código postal</label>
+<input id="postal_code">
+
+<label>País</label>
+<input id="country">
+
+<div class="actions">
+<button class="primary next">Continuar</button>
+</div>
+</div>
+
+<div class="stepbox" data-step="1">
+<h2>2. Datos bancarios</h2>
+
+<label>Nombre del titular</label>
+<input id="account_holder">
+
+<label>País de la cuenta</label>
+<select id="iban_country">
+<option value="">Selecciona el país de la cuenta</option>
+</select>
+
+<label>IBAN</label>
+<input id="iban">
+
+<label>Número de cuenta</label>
+<input id="account_number">
+
+<div class="info">
+Introduce el IBAN correspondiente al país de tu cuenta.
+</div>
+
+<div class="actions">
+<button class="back">Atrás</button>
+<button class="primary next">Continuar</button>
+</div>
+</div>
+
+<div class="stepbox" data-step="2">
+<h2>3. Información financiera</h2>
+
+<label>Ingresos mensuales</label>
+<input id="monthly_income" type="number" min="0">
+
+<label>Situación laboral</label>
+<select id="employment_status">
+<option value="">Selecciona una opción</option>
+<option>Empleado</option>
+<option>Autónomo</option>
+<option>Desempleado</option>
+<option>Jubilado</option>
+<option>Estudiante</option>
+<option>Otro</option>
+</select>
+
+<label>Origen de fondos</label>
+<input id="source_of_funds">
+
+<div class="actions">
+<button class="back">Atrás</button>
+<button class="primary next">Continuar</button>
+</div>
+</div>
+
+<div class="stepbox" data-step="3">
+<h2>4. Documentos</h2>
+
+<p class="sub">Sube una imagen clara del frente y reverso de tu documento de identidad.</p>
+
+<label>Documento frontal</label>
+<input id="id_front" type="file" accept="image/*">
+
+<label>Documento trasero</label>
+<input id="id_back" type="file" accept="image/*">
+
+<div class="preview" id="previews"></div>
+
+<div class="info">
+Asegúrate de que el documento sea visible, esté enfocado y no tenga reflejos que oculten la información.
+</div>
+
+<div class="actions">
+<button class="back">Atrás</button>
+<button class="primary next">Continuar</button>
+</div>
+</div>
+
+<div class="stepbox" data-step="4">
+<h2>5. Revisar y enviar</h2>
+
+<div id="review"></div>
+
+<label>
+<input id="consent" type="checkbox" style="width:auto">
+ Confirmo que la información proporcionada es correcta y autorizo su revisión.
+</label>
+
+<div class="actions">
+<button class="back">Atrás</button>
+<button class="primary btn-icon" id="submitBtn">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+<rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.8"/>
+<path d="M8 11V7.5C8 5.01 10.01 3 12.5 3C14.6 3 16.38 4.46 16.87 6.43" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+</svg>
+<span id="submitBtnText">Enviar solicitud</span>
+</button>
+</div>
+</div>
+
+</div>
+`;
+
+// Rellena el desplegable de país de la cuenta con los países que usan IBAN.
+$("iban_country").innerHTML =
+'<option value="">Selecciona el país de la cuenta</option>' +
+IBAN_COUNTRIES
+.slice()
+.sort((a,b)=>a[1].localeCompare(b[1],"es"))
+.map(c=>`<option value="${c[0]}">${esc(c[1])}</option>`)
+.join("");
+
+let step=0;
+
+function show(n){
+step=n;
+
+document
+.querySelectorAll(".stepbox")
+.forEach(x=>
+x.classList.toggle(
+"active",
+Number(x.dataset.step)===step
+));
+
+document
+.querySelectorAll(".steps .step")
+.forEach((x,i)=>
+x.classList.toggle(
+"active",
+i<=step
+));
+
+if(step===4)
+buildReview();
+}
+
+async function validate(n){
+
+const ids=[
+["full_name","Nombre completo"],
+["birth_date","Fecha de nacimiento"],
+["address","Dirección"],
+["city","Ciudad"],
+["postal_code","Código postal"],
+["country","País"]
+];
+
+if(n===0){
+for(const [id,name] of ids){
+if(!$(`${id}`).value.trim()){
+$("formmsg").innerHTML =
+`<div class="err">Completa: ${name}.</div>`;
+return false;
+}
+}
+}
+
+if(n===1){
+if(!$("account_holder").value.trim()){
+$("formmsg").innerHTML =
+`<div class="err">Completa el nombre del titular.</div>`;
+return false;
+}
+
+if(!$("iban_country").value){
+$("formmsg").innerHTML =
+`<div class="err">Selecciona el país de la cuenta.</div>`;
+return false;
+}
+
+if(!$("account_number").value.trim()){
+$("formmsg").innerHTML =
+`<div class="err">Completa el número de cuenta.</div>`;
+return false;
+}
+
+if(!ibanValid($("iban").value, $("iban_country").value)){
+$("formmsg").innerHTML =
+`<div class="err">Hay un error en el campo IBAN. Corrígelo e inténtalo de nuevo.</div>`;
+return false;
+}
+}
+
+if(n===2){
+if(!$("monthly_income").value ||
+!$("employment_status").value ||
+!$("source_of_funds").value.trim()){
+$("formmsg").innerHTML =
+`<div class="err">Completa todos los campos financieros.</div>`;
+return false;
+}
+}
+
+if(n===3){
+const front = $("id_front").files[0];
+const back = $("id_back").files[0];
+
+if(!front || !back){
+$("formmsg").innerHTML =
+`<div class="err">Debes subir las dos caras del documento.</div>`;
+return false;
+}
+
+const [checkFront, checkBack] = await Promise.all([
+checkIdPhoto(front),
+checkIdPhoto(back)
+]);
+
+if(!checkFront.ok){
+$("formmsg").innerHTML =
+`<div class="err">Foto frontal: ${esc(checkFront.reason)}</div>`;
+return false;
+}
+
+if(!checkBack.ok){
+$("formmsg").innerHTML =
+`<div class="err">Foto trasera: ${esc(checkBack.reason)}</div>`;
+return false;
+}
+}
+
+$("formmsg").innerHTML="";
+return true;
+}
+
+document.addEventListener("click",async e=>{
+if(e.target.classList.contains("next")){
+e.target.disabled = true;
+const passed = await validate(step);
+e.target.disabled = false;
+if(passed) show(step+1);
+}
+
+if(e.target.classList.contains("back")){
+show(Math.max(0,step-1));
+}
+});
+
+function buildReview(){
+
+const fields=[
+["Nombre", "full_name"],
+["Nacimiento","birth_date"],
+["Dirección","address"],
+["Ciudad","city"],
+["Código postal","postal_code"],
+["País","country"],
+["Titular","account_holder"],
+["País de la cuenta","iban_country_label"],
+["IBAN","iban"],
+["Cuenta","account_number"],
+["Ingresos mensuales","monthly_income"],
+["Situación laboral","employment_status"],
+["Origen de fondos","source_of_funds"]
+];
+
+$("review").innerHTML =
+fields.map(([a,b])=>{
+const val = b==="iban_country_label"
+? ($("iban_country").selectedOptions[0]?.textContent || "")
+: $(b).value;
+return `<p><strong>${a}:</strong> ${esc(val)}</p>`;
+}).join("");
+}
+
+// Nombre corto de archivo para el nombre de la ruta en Storage (no sirve para comparar contenido).
+function fileSlug(file){
+return file.size+"_"+file.lastModified;
+}
+
+// Hash real del contenido del archivo (SHA-256), para detectar si dos fotos son exactamente la misma imagen,
+// aunque el archivo tenga otro nombre.
+async function fileContentHash(file){
+const buf = await file.arrayBuffer();
+const digest = await crypto.subtle.digest("SHA-256", buf);
+return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+function imageDims(file){
+return new Promise(resolve=>{
+const img=new Image();
+
+img.onload=()=>{
+resolve({
+width:img.width,
+height:img.height
+});
+};
+
+img.onerror=()=>resolve(null);
+
+img.src=URL.createObjectURL(file);
+});
+}
+
+// Chequeo básico de que la foto parece un carnet: resolución mínima y proporción ancho:alto
+// cercana a la de un documento de identidad estándar (como una tarjeta de crédito, ~1.586:1).
+// Esto no confirma que el documento sea auténtico, solo descarta fotos que claramente no son de un carnet.
+async function checkIdPhoto(file){
+if(!file) return {ok:false, reason:"Falta la imagen."};
+if(!file.type.startsWith("image/")) return {ok:false, reason:"Solo se permiten imágenes."};
+
+const dims = await imageDims(file);
+if(!dims) return {ok:false, reason:"No se pudo leer la imagen."};
+if(dims.width<500 || dims.height<300) return {ok:false, reason:"Resolución muy baja."};
+
+const ratio = Math.max(dims.width,dims.height) / Math.min(dims.width,dims.height);
+if(ratio < 1.25 || ratio > 2.2){
+return {ok:false, reason:"La proporción de la imagen no parece la de un carnet. Encuadra solo el documento, sin bordes extra."};
+}
+
+return {ok:true, reason:""};
+}
+
+$("id_front").onchange =
+$("id_back").onchange =
+async()=>{
+const files=[
+$("id_front").files[0],
+$("id_back").files[0]
+].filter(Boolean);
+
+$("previews").innerHTML="";
+let anyProblem = false;
+
+for(const file of files){
+
+const check = await checkIdPhoto(file);
+
+const img =
+document.createElement("img");
+
+img.src =
+URL.createObjectURL(file);
+
+img.alt="Vista previa";
+img.style.border = check.ok ? "2px solid #198754" : "2px solid #dc3545";
+
+const wrap = document.createElement("div");
+wrap.appendChild(img);
+
+if(!check.ok){
+anyProblem = true;
+const note = document.createElement("div");
+note.style.cssText = "font-size:12px;color:#dc3545;max-width:150px";
+note.textContent = check.reason;
+wrap.appendChild(note);
+}
+
+$("previews").appendChild(wrap);
+}
+
+if(anyProblem){
+$("formmsg").innerHTML =
+`<div class="err">Alguna de las fotos no parece válida (mira el borde rojo). Sube una foto clara que muestre solo el documento de identidad.</div>`;
+}else if(files.length === 2){
+$("formmsg").innerHTML = "";
+}
+};
+
+$("submitBtn").onclick =
+async()=>{
+
+if(!$("consent").checked){
+$("formmsg").innerHTML =
+`<div class="err">Debes aceptar la confirmación antes de enviar.</div>`;
+return;
+}
+
+await submit(user);
+
+};
+
+async function submit(user){
+
+const front =
+$("id_front").files[0];
+
+const back =
+$("id_back").files[0];
+
+if(!front || !back){
+$("formmsg").innerHTML =
+`<div class="err">Faltan documentos.</div>`;
+return;
+}
+
+$("submitBtn").disabled=true;
+$("submitBtnText").textContent="Verificando fotos...";
+
+try{
+
+const [hashFront, hashBack] = await Promise.all([
+fileContentHash(front),
+fileContentHash(back)
+]);
+
+if(hashFront === hashBack){
+$("formmsg").innerHTML =
+`<div class="err">El documento frontal y el trasero son la misma imagen. Sube dos fotos distintas.</div>`;
+$("submitBtn").disabled=false;
+$("submitBtnText").textContent="Enviar solicitud";
+return;
+}
+
+$("submitBtnText").textContent="Enviando...";
+
+const stamp =
+Date.now();
+
+const frontPath =
+`${user.id}/${stamp}_front_${fileSlug(front)}`;
+
+const backPath =
+`${user.id}/${stamp}_back_${fileSlug(back)}`;
+
+let result =
+await sb.storage
+.from("kyc-docs")
+.upload(
+frontPath,
+front,
+{upsert:false}
+);
+
+if(result.error)
+throw result.error;
+
+result =
+await sb.storage
+.from("kyc-docs")
+.upload(
+backPath,
+back,
+{upsert:false}
+);
+
+if(result.error)
+throw result.error;
+
+const reference =
+"VD-"+stamp;
+
+const payload={
+
+user_id:user.id,
+
+full_name:$("full_name").value.trim(),
+
+birth_date:$("birth_date").value,
+
+address:$("address").value.trim(),
+
+city:$("city").value.trim(),
+
+postal_code:$("postal_code").value.trim(),
+
+country:$("country").value.trim(),
+
+account_holder:$("account_holder").value.trim(),
+
+account_number:$("account_number").value.trim(),
+
+iban:$("iban").value.replace(/\s/g,"").toUpperCase(),
+
+monthly_income:$("monthly_income").value,
+
+employment_status:$("employment_status").value,
+
+source_of_funds:$("source_of_funds").value.trim(),
+
+id_front_path:frontPath,
+
+id_back_path:backPath,
+
+status:"pending",
+
+reference
+
+};
+
+const {error} =
+await sb
+.from("kyc_submissions")
+.insert(payload);
+
+if(error)
+throw error;
+
+$("formmsg").innerHTML =
+`<div class="success">
+Solicitud enviada correctamente.<br><br>
+Referencia: <strong>${esc(reference)}</strong><br>
+Tu información queda en proceso de revisión. El plazo máximo de revisión establecido es de 72 horas.
+</div>`;
+
+$("submitBtnText").textContent="Solicitud enviada";
+$("submitBtn").disabled=true;
+
+await loadUser(user);
+
+} catch(error) {
+
+$("formmsg").innerHTML =
+`<div class="err">No se pudo enviar la solicitud: ${esc(error.message || error)}</div>`;
+
+$("submitBtn").disabled = false;
+$("submitBtnText").textContent = "Enviar solicitud";
+
+}
+
+}
+
+async function loadAdmin(){
+
+const box =
+$("adminview");
+
+box.innerHTML =
+"<p class='sub'>Cargando solicitudes...</p>";
+
+const {
+data,
+error
+} =
+await sb
+.from("kyc_submissions")
+.select("*")
+.order("created_at",{ascending:false});
+
+if(error){
+
+box.innerHTML = `
+<div class="card">
+<p class="err">
+${esc(error.message)}
+</p>
+</div>
+`;
+
+return;
+
+}
+
+
+if(!data || !data.length){
+
+box.innerHTML = `
+<div class="card">
+<p class="sub">
+No hay solicitudes todavía.
+</p>
+</div>
+`;
+
+return;
+
+}
+
+
+box.innerHTML = `
+
+<div class="card">
+
+<h2>
+Solicitudes de verificación
+</h2>
+
+<p class="sub">
+Revisa la información recibida y actualiza el estado.
+</p>
+
+<div class="info">
+
+<strong>
+Plazo de revisión
+</strong>
+
+Las solicitudes deben gestionarse dentro del plazo máximo establecido de 72 horas.
+
+</div>
+
+</div>
+
+`;
+
+
+for(const r of data){
+
+let frontUrl = "";
+let backUrl = "";
+
+
+if(r.id_front_path){
+
+const result =
+await sb.storage
+.from("kyc-docs")
+.createSignedUrl(
+r.id_front_path,
+300
+);
+
+frontUrl =
+result.data?.signedUrl || "";
+
+}
+
+
+if(r.id_back_path){
+
+const result =
+await sb.storage
+.from("kyc-docs")
+.createSignedUrl(
+r.id_back_path,
+300
+);
+
+backUrl =
+result.data?.signedUrl || "";
+
+}
+
+
+const d =
+document.createElement("div");
+
+d.className =
+"card";
+
+
+const status =
+r.status || "pending";
+
+
+d.innerHTML = `
+
+<div class="top">
+
+<div>
+
+<b>
+${esc(r.full_name)}
+</b>
+
+<div class="steps-note">
+${esc(r.reference || "Sin referencia")}
+</div>
+
+</div>
+
+
+<span class="badge ${esc(status)}">
+
+${
+status === "approved"
+?
+"Aprobada"
+:
+status === "rejected"
+?
+"Rechazada"
+:
+"En revisión"
+}
+
+</span>
+
+</div>
+
+
+<dl>
+
+<dt>
+Fecha de nacimiento
+</dt>
+
+<dd>
+${esc(r.birth_date)}
+</dd>
+
+
+<dt>
+Domicilio
+</dt>
+
+<dd>
+${esc(r.address)},
+${esc(r.postal_code)}
+${esc(r.city)},
+${esc(r.country)}
+</dd>
+
+
+<dt>
+Titular
+</dt>
+
+<dd>
+${esc(r.account_holder)}
+</dd>
+
+
+<dt>
+IBAN
+</dt>
+
+<dd>
+${esc(r.iban)}
+</dd>
+
+
+<dt>
+Cuenta
+</dt>
+
+<dd>
+${esc(r.account_number || "—")}
+</dd>
+
+
+<dt>
+Ingresos
+</dt>
+
+<dd>
+${esc(r.monthly_income)}
+</dd>
+
+
+<dt>
+Situación
+</dt>
+
+<dd>
+${esc(r.employment_status)}
+</dd>
+
+
+<dt>
+Origen de fondos
+</dt>
+
+<dd>
+${esc(r.source_of_funds)}
+</dd>
+
+
+<dt>
+Enviada
+</dt>
+
+<dd>
+${
+r.created_at
+?
+new Date(r.created_at).toLocaleString("es")
+:
+"—"
+}
+</dd>
+
+</dl>
+
+
+<div class="imgs">
+
+<img
+src="${frontUrl}"
+alt="Documento frontal"
+>
+
+<img
+src="${backUrl}"
+alt="Documento trasero"
+>
+
+</div>
+
+
+<div class="actions">
+
+<button class="ok">
+Aprobar
+</button>
+
+<button class="bad">
+Rechazar
+</button>
+
+</div>
+
+`;
+
+
+const buttons =
+d.querySelectorAll("button");
+
+
+buttons[0].onclick =
+()=>setStatus(
+r.id,
+"approved"
+);
+
+
+buttons[1].onclick =
+()=>setStatus(
+r.id,
+"rejected"
+);
+
+
+box.appendChild(d);
+
+}
+
+}
+
+
+async function setStatus(id,status){
+
+const {error} =
+await sb
+.from("kyc_submissions")
+.update({status})
+.eq("id",id);
+
+
+if(error){
+
+alert(
+"No se pudo actualizar el estado: "+
+error.message
+);
+
+return;
+
+}
+
+
+await loadAdmin();
+
+}
+
+
+}
+
+startApp();
+
+</script>
+
+</body>
+</html>
